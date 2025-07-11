@@ -84,26 +84,40 @@ The application uses Drizzle ORM with PostgreSQL, featuring these main tables:
 
 ## Deployment Strategy
 
+### Vercel Deployment
+The application is optimized for Vercel deployment as a static site:
+- **Build Command**: `vite build` - Creates optimized frontend bundle
+- **Output Directory**: `dist` - Static assets served by Vercel CDN
+- **Framework**: Static site with client-side routing
+
 ### Environment Configuration
-The application supports multiple deployment environments:
-- **Development**: Local development with hot reload
-- **Production**: Optimized build with static asset serving
+Required environment variables for production deployment:
+- `OKTA_DOMAIN`: Okta tenant domain (fcxdemo.okta.com)
+- `OKTA_SPA_CLIENT_ID`: Single Page Application client ID
+- `OKTA_CLIENT_CREDENTIALS_CLIENT_ID`: Service client ID
+- `OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET`: Service client secret
+- `OKTA_API_TOKEN`: API token for user management
+- `PAM_API_KEY_ID`: Privileged Access Management key ID
+- `PAM_API_KEY_SECRET`: PAM secret key
+- `PAM_RESOURCE_GROUP_ID`: PAM resource group identifier
+- `PAM_PROJECT_ID`: PAM project identifier
+- `PAM_SECRET_ID`: PAM secret identifier
 
 ### Build Process
-- Frontend builds to `dist/public` for static serving
-- Backend builds to `dist/` with ESM modules
-- Database migrations handled through Drizzle Kit
+- Frontend builds to `dist/` for static serving
+- Vite optimizes and bundles React application
+- Static assets served via Vercel's global CDN
+- Client-side routing handles navigation
 
 ### Security Considerations
-- All sensitive configuration through environment variables
-- Token validation and secure storage
-- Audit logging for all security events
-- CORS and security headers configured
+- All sensitive configuration through Vercel environment variables
+- Static site security with no exposed server endpoints
+- Client-side authentication with Okta OIDC
+- API calls made directly to Okta services from browser
 
-### Scalability Features
-- Modular service architecture allows for easy scaling
-- Database abstraction supports different storage backends
-- WebSocket connections can be scaled horizontally
-- Stateless API design supports load balancing
+### Recent Changes
+- **2025-01-11**: Configured Vercel deployment with proper build settings
+- **2025-01-11**: Updated environment variable configuration for production
+- **2025-01-11**: Created comprehensive deployment documentation
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

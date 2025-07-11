@@ -60,6 +60,9 @@ export class MemStorage implements IStorage {
     const newSession: WorkflowSession = {
       ...session,
       id: this.workflowSessionId++,
+      status: session.status || 'active',
+      currentStep: session.currentStep || 1,
+      metadata: session.metadata || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -84,6 +87,13 @@ export class MemStorage implements IStorage {
     const newRequest: AccessRequest = {
       ...request,
       id: this.accessRequestId++,
+      status: request.status || 'pending',
+      targetUser: request.targetUser || null,
+      requestedScope: request.requestedScope || null,
+      approverId: request.approverId || null,
+      approverName: request.approverName || null,
+      justification: request.justification || null,
+      expiresAt: request.expiresAt || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -112,6 +122,9 @@ export class MemStorage implements IStorage {
     const newToken: TokenStore = {
       ...token,
       id: this.tokenId++,
+      scopes: token.scopes || null,
+      actAs: token.actAs || null,
+      expiresAt: token.expiresAt || null,
       createdAt: new Date(),
     };
     this.tokenStore.set(newToken.id, newToken);
@@ -136,6 +149,8 @@ export class MemStorage implements IStorage {
     const newLog: AuditLog = {
       ...log,
       id: this.auditLogId++,
+      userId: log.userId || null,
+      eventData: log.eventData || null,
       timestamp: new Date(),
     };
     this.auditLogs.set(newLog.id, newLog);
@@ -150,6 +165,7 @@ export class MemStorage implements IStorage {
     const newNotification: Notification = {
       ...notification,
       id: this.notificationId++,
+      status: notification.status || 'sent',
       createdAt: new Date(),
     };
     this.notifications.set(newNotification.id, newNotification);

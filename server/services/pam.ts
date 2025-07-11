@@ -14,12 +14,12 @@ export class PAMService {
 
   constructor() {
     this.config = {
-      domain: process.env.OKTA_DOMAIN || process.env.OKTA_DOMAIN_ENV_VAR || 'dev-example.okta.com',
-      apiKeyId: process.env.PAM_API_KEY_ID || process.env.PAM_API_KEY_ID_ENV_VAR || 'c0e75418-05f5-4c0b-b86a-b4befcbebc25',
-      apiKeySecret: process.env.PAM_API_KEY_SECRET || process.env.PAM_API_KEY_SECRET_ENV_VAR || 'dTctB7Mg7iYOoeWsOMztuzjcceHhyWoAAstPAQV4fGrM0EWy0Y4vvWjKTXjkGbDMCU1aYiAnpjvrA063f+6Hlg==',
-      resourceGroupId: process.env.PAM_RESOURCE_GROUP_ID || process.env.PAM_RESOURCE_GROUP_ID_ENV_VAR || '7b3e9a80-8253-4b42-a4ec-7ddeba77f3da',
-      projectId: process.env.PAM_PROJECT_ID || process.env.PAM_PROJECT_ID_ENV_VAR || 'e9fc2837-32e8-4700-9689-a8d3d3391928',
-      secretId: process.env.PAM_SECRET_ID || process.env.PAM_SECRET_ID_ENV_VAR || '27ab37e0-3fee-442b-8f0f-2cdbd8cfc18e',
+      domain: process.env.OKTA_DOMAIN || 'fcxdemo.okta.com',
+      apiKeyId: process.env.PAM_API_KEY_ID || 'c0e75418-05f5-4c0b-b86a-b4befcbebc25',
+      apiKeySecret: process.env.PAM_API_KEY_SECRET || 'dTctB7Mg7iYOoeWsOMztuzjcceHhyWoAAstPAQV4fGrM0EWy0Y4vvWjKTXjkGbDMCU1aYiAnpjvrA063f+6Hlg==',
+      resourceGroupId: process.env.PAM_RESOURCE_GROUP_ID || '7b3e9a80-8253-4b42-a4ec-7ddeba77f3da',
+      projectId: process.env.PAM_PROJECT_ID || 'e9fc2837-32e8-4700-9689-a8d3d3391928',
+      secretId: process.env.PAM_SECRET_ID || '27ab37e0-3fee-442b-8f0f-2cdbd8cfc18e',
     };
   }
 

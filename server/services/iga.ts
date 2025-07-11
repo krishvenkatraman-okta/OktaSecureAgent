@@ -10,8 +10,8 @@ export class IGAService {
 
   constructor() {
     this.config = {
-      domain: process.env.OKTA_DOMAIN || process.env.OKTA_DOMAIN_ENV_VAR || 'dev-example.okta.com',
-      apiToken: process.env.OKTA_API_TOKEN || process.env.OKTA_API_TOKEN_ENV_VAR || 'default_token',
+      domain: process.env.OKTA_DOMAIN || 'fcxdemo.okta.com',
+      apiToken: process.env.OKTA_API_TOKEN || '00R8Oroauby567d6O2oO04L7fYM44fOxj83U9p-ftm',
     };
   }
 

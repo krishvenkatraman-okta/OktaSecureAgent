@@ -8,7 +8,7 @@ export const workflowSessions = pgTable("workflow_sessions", {
   userId: text("user_id").notNull(),
   currentStep: integer("current_step").notNull().default(1),
   status: text("status").notNull().default("active"), // active, completed, failed
-  metadata: json("metadata").$type<Record<string, any>>(),
+  metadata: json("metadata").$type<Record<string, any>>().default({}),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -43,7 +43,7 @@ export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
   sessionId: text("session_id").notNull(),
   eventType: text("event_type").notNull(), // auth, request, approval, access
-  eventData: json("event_data").$type<Record<string, any>>(),
+  eventData: json("event_data").$type<Record<string, any>>().default({}),
   userId: text("user_id"),
   timestamp: timestamp("timestamp").defaultNow(),
 });

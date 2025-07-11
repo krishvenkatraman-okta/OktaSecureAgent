@@ -7,6 +7,7 @@ import { APIStatus } from '@/components/APIStatus';
 import { CurrentRequest } from '@/components/CurrentRequest';
 import { LiveNotifications } from '@/components/LiveNotifications';
 import { TechnicalDetails } from '@/components/TechnicalDetails';
+import { ChatInterface } from '@/components/ChatInterface';
 import { SimulationControls } from '@/components/SimulationControls';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +20,7 @@ export default function Dashboard() {
   const [sessionId, setSessionId] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize workflow and check authentication
+  // Initialize workflow session without authentication
   useEffect(() => {
     const initializeWorkflow = async () => {
       try {
@@ -52,25 +53,31 @@ export default function Dashboard() {
             throw new Error('Authentication failed');
           }
         } else {
-          // No authentication, redirect to Okta
-          const response = await fetch('/api/auth/login', {
+          // Initialize workflow session without authentication
+          const response = await fetch('/api/workflow/init', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: 'chatbot-user' }),
           });
           
           if (response.ok) {
             const data = await response.json();
-            // Redirect to Okta for authentication
-            window.location.href = data.authUrl;
+            setSessionId(data.sessionId);
+            setIsInitialized(true);
+            
+            toast({
+              title: 'AI Agent Ready',
+              description: 'Chat with the AI agent to request access to CRM data',
+            });
           } else {
-            throw new Error('Failed to get auth URL');
+            throw new Error('Failed to initialize workflow');
           }
         }
       } catch (error) {
         console.error('Failed to initialize workflow:', error);
         toast({
-          title: 'Authentication Failed',
-          description: 'Could not authenticate with Okta. Please try again.',
+          title: 'Initialization Failed',
+          description: 'Could not initialize the AI agent. Please try again.',
           variant: 'destructive',
         });
       }
@@ -79,28 +86,28 @@ export default function Dashboard() {
     initializeWorkflow();
   }, [toast]);
 
-  // Simulate OIDC callback for demo
-  const handleOIDCCallback = async (sessionId: string) => {
+  // Trigger Okta authentication when requested by chatbot
+  const triggerAuthentication = async () => {
     try {
-      const response = await fetch('/api/auth/oidc-callback', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          idToken: 'mock-id-token',
-          accessToken: 'mock-access-token',
-          userId: 'demo-user@acme.com',
-        }),
       });
       
       if (response.ok) {
-        toast({
-          title: 'Authentication Successful',
-          description: 'User authenticated via Okta OIDC',
-        });
+        const data = await response.json();
+        // Redirect to Okta for authentication
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error('Failed to get auth URL');
       }
     } catch (error) {
-      console.error('OIDC callback failed:', error);
+      console.error('Authentication trigger failed:', error);
+      toast({
+        title: 'Authentication Failed',
+        description: 'Could not start Okta authentication. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -239,13 +246,21 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Dashboard */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Workflow Progress */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column: Chat Interface */}
+          <div>
+            <ChatInterface 
+              sessionId={sessionId} 
+              onTriggerAuth={triggerAuthentication}
+            />
+          </div>
+          
+          {/* Right Column: Workflow Status */}
+          <div className="space-y-6">
             <WorkflowTimeline
               currentStep={currentStep}
               sessionId={sessionId}
-              userId="demo-user@acme.com"
+              userId={workflowState?.session?.userId}
             />
             
             <APIStatus currentStep={currentStep} tokens={tokens} />

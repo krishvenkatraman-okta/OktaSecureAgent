@@ -1,0 +1,184 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Send, Bot, User } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'bot';
+  message: string;
+  timestamp: Date;
+  action?: string;
+}
+
+interface ChatInterfaceProps {
+  sessionId: string;
+  onTriggerAuth: () => void;
+}
+
+export function ChatInterface({ sessionId, onTriggerAuth }: ChatInterfaceProps) {
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      type: 'bot',
+      message: 'Hello! I\'m your AI agent. I can help you access CRM data securely. Just ask me to "get CRM data" and I\'ll handle the authentication and authorization process.',
+      timestamp: new Date(),
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleSendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      message: input,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsProcessing(true);
+
+    // Simulate bot processing
+    setTimeout(async () => {
+      const lowerInput = input.toLowerCase();
+      
+      if (lowerInput.includes('crm') || lowerInput.includes('customer') || lowerInput.includes('data')) {
+        // Trigger authentication flow
+        const botMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: 'I need to authenticate you with Okta to access CRM data securely. I\'ll redirect you to Okta for login.',
+          timestamp: new Date(),
+          action: 'auth'
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
+        
+        // Trigger Okta authentication
+        setTimeout(() => {
+          onTriggerAuth();
+        }, 1500);
+        
+      } else if (lowerInput.includes('hello') || lowerInput.includes('hi')) {
+        const botMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: 'Hi there! I can help you securely access CRM customer data. Just ask me to "get CRM data" when you\'re ready.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, botMessage]);
+        
+      } else {
+        const botMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: 'I can help you access CRM data securely. Try asking me to "get CRM data" and I\'ll guide you through the Zero Trust authentication process.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, botMessage]);
+      }
+      
+      setIsProcessing(false);
+    }, 1000);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <Card className="h-[600px] flex flex-col">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="h-5 w-5" />
+          AI Agent Chat
+          <Badge variant="outline">Zero Trust Security</Badge>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="flex-1 flex flex-col gap-4">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {message.type === 'bot' && (
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-blue-600" />
+                </div>
+              )}
+              
+              <div
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.type === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                }`}
+              >
+                <p className="text-sm">{message.message}</p>
+                {message.action === 'auth' && (
+                  <Badge variant="secondary" className="mt-2">
+                    Authentication Required
+                  </Badge>
+                )}
+              </div>
+              
+              {message.type === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 text-gray-600" />
+                </div>
+              )}
+            </div>
+          ))}
+          
+          {isProcessing && (
+            <div className="flex gap-3 justify-start">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="bg-gray-100 rounded-lg p-3">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Input */}
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask me to get CRM data..."
+            className="flex-1"
+            disabled={isProcessing}
+          />
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={!input.trim() || isProcessing}
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

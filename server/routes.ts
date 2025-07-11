@@ -7,6 +7,7 @@ import { pamService } from "./services/pam";
 import { igaService } from "./services/iga";
 import { crmService } from "./services/crm";
 import { nanoid } from "nanoid";
+import { createHash, randomBytes } from "crypto";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -110,9 +111,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const nonce = nanoid();
       
       // Generate PKCE parameters
-      const crypto = require('crypto');
-      const codeVerifier = crypto.randomBytes(128).toString('base64url');
-      const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+      const codeVerifier = randomBytes(32).toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+      const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
       
       // Store state, nonce, and code verifier for validation
       // In production, store these in Redis or database

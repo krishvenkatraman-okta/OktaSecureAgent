@@ -17,11 +17,12 @@ interface ChatMessage {
 interface ChatInterfaceProps {
   sessionId: string;
   onTriggerAuth: () => void;
+  onRequestAccess?: (targetUser: string) => void;
   isAuthenticated?: boolean;
   currentStep?: number;
 }
 
-export function ChatInterface({ sessionId, onTriggerAuth, isAuthenticated = false, currentStep = 1 }: ChatInterfaceProps) {
+export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAuthenticated = false, currentStep = 1 }: ChatInterfaceProps) {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [pendingAccessRequest, setPendingAccessRequest] = useState<any>(null);
@@ -97,41 +98,19 @@ export function ChatInterface({ sessionId, onTriggerAuth, isAuthenticated = fals
         };
         setMessages(prev => [...prev, botMessage]);
         
-        try {
-          const response = await fetch(`/api/workflow/${sessionId}/request-access`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              targetUser: email,
-              requestedScope: 'crm_read',
-              justification: `AI agent needs to access CRM data for ${email}`
-            }),
-          });
+        if (onRequestAccess) {
+          onRequestAccess(email);
           
-          if (response.ok) {
-            const data = await response.json();
-            setPendingAccessRequest(data.accessRequest);
-            
-            setTimeout(() => {
-              const approvalMessage: ChatMessage = {
-                id: (Date.now() + 2).toString(),
-                type: 'bot',
-                message: `✅ PAM request submitted and IGA approval request created for crm_read scope targeting ${email}. The request is now pending approval. You can simulate approval using the controls on the right.`,
-                timestamp: new Date(),
-                action: 'pending_approval'
-              };
-              setMessages(prev => [...prev, approvalMessage]);
-            }, 1000);
-          }
-        } catch (error) {
-          console.error('Access request failed:', error);
-          const errorMessage: ChatMessage = {
-            id: (Date.now() + 3).toString(),
-            type: 'bot',
-            message: 'Sorry, I encountered an error while requesting access. Please try again.',
-            timestamp: new Date(),
-          };
-          setMessages(prev => [...prev, errorMessage]);
+          setTimeout(() => {
+            const approvalMessage: ChatMessage = {
+              id: (Date.now() + 2).toString(),
+              type: 'bot',
+              message: `✅ PAM request submitted for retrieving client credentials and IGA approval request created for crm_read scope targeting ${email}. The request is now pending approval. You can simulate approval using the controls on the right.`,
+              timestamp: new Date(),
+              action: 'pending_approval'
+            };
+            setMessages(prev => [...prev, approvalMessage]);
+          }, 1000);
         }
         
       } else if (lowerInput.includes('retry') && pendingAccessRequest) {

@@ -17,16 +17,17 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
       icon: User,
       details: {
         clientId: '0oat46o2xf1bddBxb697',
-        scopes: 'openid, profile',
+        scopes: 'openid, profile, email',
       },
     },
     {
       id: 2,
-      title: 'Agent Welcome',
-      description: 'AI Agent authenticated and ready to serve',
+      title: 'Welcome User Profile',
+      description: 'Extract user claims from ID token and display welcome message',
       icon: User,
       details: {
-        status: 'Ready for CRM access requests',
+        claims: 'name, email, preferred_username',
+        tokenType: 'ID Token',
       },
     },
     {
@@ -99,7 +100,7 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
       case 'completed':
         return <Badge className="bg-success text-white">COMPLETED</Badge>;
       case 'current':
-        if (stepId === 3) {
+        if (stepId === 4) {
           return <Badge className="bg-warning text-white">PENDING APPROVAL</Badge>;
         } else {
           return <Badge className="bg-warning text-white">IN PROGRESS</Badge>;

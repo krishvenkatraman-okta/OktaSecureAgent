@@ -193,11 +193,11 @@ export default function Dashboard() {
     }
   }, [lastMessage, toast]);
 
-  const handleRequestAccess = () => {
+  const handleRequestAccess = (targetUser = 'brandon.stark@acme.com') => {
     requestAccess({
-      targetUser: 'brandon.stark@acme.com',
+      targetUser,
       requestedScope: 'crm.read',
-      justification: 'AI agent needs to access CRM data for customer support inquiry',
+      justification: `AI agent needs to access CRM data for ${targetUser}`,
     });
   };
 
@@ -273,6 +273,7 @@ export default function Dashboard() {
             <ChatInterface 
               sessionId={sessionId} 
               onTriggerAuth={triggerAuthentication}
+              onRequestAccess={handleRequestAccess}
               isAuthenticated={isAuthenticated}
               currentStep={currentStep}
             />

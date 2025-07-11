@@ -184,13 +184,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           metadata: { state, authCode: code, authenticated: true, skipUserProfileFetch: true } as any,
         });
 
-        // Store tokens
+        // Decode ID token to extract user claims
+        let userClaims = null;
+        if (tokens.id_token) {
+          try {
+            // Simple base64 decode of JWT payload (for demo purposes)
+            const payload = tokens.id_token.split('.')[1];
+            const decodedPayload = Buffer.from(payload, 'base64').toString();
+            userClaims = JSON.parse(decodedPayload);
+            console.log('User claims extracted:', userClaims);
+          } catch (error) {
+            console.warn('Failed to decode ID token:', error);
+          }
+        }
+
+        // Store tokens with user claims
         await storage.createToken({
           sessionId,
           tokenType: 'id_token',
           tokenValue: tokens.id_token || 'mock-id-token',
           scopes: 'openid profile email',
           expiresAt: new Date(Date.now() + 3600000),
+          actAs: userClaims?.name || userClaims?.preferred_username || 'authenticated-user',
         });
 
         await storage.createToken({

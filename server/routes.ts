@@ -179,6 +179,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get CRM data with elevated token
+  app.post('/api/workflow/:sessionId/get-crm-data', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      // Get elevated token from PAM
+      const elevatedToken = await pamService.getElevatedToken(['crm.read'], 'brandon.stark@acme.com');
+      
+      // Store elevated token
+      await storage.createToken({
+        sessionId,
+        tokenType: 'elevated_access',
+        tokenValue: elevatedToken,
+        scopes: 'crm.read',
+        expiresAt: new Date(Date.now() + 3600000),
+        actAs: 'brandon.stark@acme.com'
+      });
+      
+      // Get CRM data
+      const crmData = await crmService.getContacts('brandon.stark@acme.com', elevatedToken);
+      const contact = crmData[0]; // Get first contact
+      
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'crm_data_access',
+        eventData: { actAs: 'brandon.stark@acme.com', contactId: contact?.id } as any,
+        userId: 'ai-agent',
+      });
+      
+      sendRealtimeUpdate(sessionId, {
+        type: 'crm_data_retrieved',
+        step: 4,
+        actingAs: 'brandon.stark@acme.com',
+        contact
+      });
+      
+      res.json({ 
+        success: true, 
+        actingAs: 'brandon.stark@acme.com',
+        contact,
+        elevatedToken: elevatedToken.substring(0, 20) + '...' // Show partial token for demo
+      });
+    } catch (error) {
+      console.error('Error getting CRM data:', error);
+      res.status(500).json({ error: 'Failed to get CRM data' });
+    }
+  });
+
   // Request elevated access (PAM + IGA)
   app.post('/api/workflow/:sessionId/request-access', async (req, res) => {
     try {
@@ -366,6 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/workflow/:sessionId/request-write-access', async (req, res) => {
     try {
       const { sessionId } = req.params;
+      const { targetUser } = req.body;
 
       const session = await storage.getWorkflowSession(sessionId);
       if (!session) {
@@ -376,7 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const accessRequest = await storage.createAccessRequest({
         sessionId,
         requestType: 'consent',
-        targetUser: 'brandon.stark@acme.com',
+        targetUser: targetUser || 'brandon.stark@acme.com',
         requestedScope: 'crm.write',
         status: 'pending',
         justification: 'AI agent needs to update CRM records',
@@ -385,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send Okta Verify push for dynamic consent
       try {
         await oktaService.sendVerifyPush(
-          session.userId,
+          targetUser || 'brandon.stark@acme.com',
           'Approve AI agent to update Salesforce CRM for Brandon Stark?'
         );
       } catch (pushError) {
@@ -395,7 +444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createNotification({
         sessionId,
         type: 'push',
-        recipient: session.userId,
+        recipient: targetUser || 'brandon.stark@acme.com',
         message: 'Approve AI agent to update Salesforce CRM for Brandon Stark?',
         status: 'sent',
       });
@@ -403,7 +452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAuditLog({
         sessionId,
         eventType: 'write_access_request',
-        eventData: { requestedScope: 'crm.write' } as Record<string, any>,
+        eventData: { requestedScope: 'crm.write', targetUser } as Record<string, any>,
         userId: session.userId,
       });
 
@@ -418,6 +467,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error requesting write access:', error);
       res.status(500).json({ error: 'Failed to request write access' });
+    }
+  });
+
+  // Simulate push approval and get write token
+  app.post('/api/workflow/:sessionId/simulate-push-approval', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+
+      const session = await storage.getWorkflowSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Get elevated write token from PAM
+      const writeToken = await pamService.getElevatedToken(['crm.write'], 'brandon.stark@acme.com');
+
+      // Store write token
+      await storage.createToken({
+        sessionId,
+        tokenType: 'write_access',
+        tokenValue: writeToken,
+        scopes: 'crm.write',
+        actAs: 'brandon.stark@acme.com',
+        expiresAt: new Date(Date.now() + 900000), // 15 minutes
+      });
+
+      // Update CRM data
+      const updatedContact = await crmService.updateContact(
+        'contact-1',
+        { status: 'Premium Customer' },
+        'brandon.stark@acme.com',
+        writeToken
+      );
+
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'crm_update',
+        eventData: { contactId: 'contact-1', updatedFields: 'status' } as Record<string, any>,
+        userId: session.userId,
+      });
+
+      // Send real-time update
+      sendRealtimeUpdate(sessionId, {
+        type: 'crm_updated',
+        step: 7,
+        updatedContact,
+        writeToken: writeToken.substring(0, 20) + '...',
+      });
+
+      res.json({ 
+        success: true, 
+        writeToken: writeToken.substring(0, 20) + '...',
+        updatedContact 
+      });
+    } catch (error) {
+      console.error('Error simulating push approval:', error);
+      res.status(500).json({ error: 'Failed to simulate push approval' });
     }
   });
 

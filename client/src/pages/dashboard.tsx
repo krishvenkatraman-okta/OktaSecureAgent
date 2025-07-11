@@ -252,6 +252,8 @@ export default function Dashboard() {
             <ChatInterface 
               sessionId={sessionId} 
               onTriggerAuth={triggerAuthentication}
+              isAuthenticated={currentStep >= 2}
+              currentStep={currentStep}
             />
           </div>
           

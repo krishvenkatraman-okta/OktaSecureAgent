@@ -90,19 +90,22 @@ export class PAMService {
       };
 
       // Step 3: Make PAM reveal request with public key (this should auto-trigger IGA approval)
+      const pamApiUrl = `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}/reveal`;
+      const requestBody = { publicKey: publicKeyJWK };
+      const requestHeaders = {
+        'Authorization': `Bearer ${bearerToken}`,
+        'Content-Type': 'application/json',
+      };
+      
+      console.log('=== PAM REVEAL API CALL DETAILS ===');
+      console.log('Method: POST');
+      console.log('URL:', pamApiUrl);
+      console.log('Headers:', JSON.stringify(requestHeaders, null, 2));
+      console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+      console.log('=== END PAM API CALL DETAILS ===');
+      
       console.log('Making PAM reveal request with public key - this should auto-trigger IGA approval workflow...');
-      const revealResponse = await axios.post(
-        `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}/reveal`,
-        {
-          publicKey: publicKeyJWK
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const revealResponse = await axios.post(pamApiUrl, requestBody, { headers: requestHeaders });
 
       const secretValue = revealResponse.data.secret_value || revealResponse.data.value || revealResponse.data.encryptedSecret;
       console.log('PAM secret reveal completed - IGA workflow should now be auto-triggered');

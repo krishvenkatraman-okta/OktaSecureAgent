@@ -32,12 +32,22 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   // Initialize messages based on authentication state
   React.useEffect(() => {
     if (isAuthenticated && currentStep >= 2) {
-      // Fetch user profile to get the name for welcome message
+      // Fetch user profile to get the name for welcome message from ID token claims
       fetch(`/api/workflow/${sessionId}`)
         .then(res => res.json())
         .then(data => {
           const idToken = data.tokens?.find((t: any) => t.tokenType === 'id_token');
-          const userName = idToken?.actAs || 'User';
+          // Extract name from ID token claims - check multiple possible claim names
+          let userName = 'User';
+          if (idToken?.tokenValue) {
+            try {
+              // Decode the JWT payload to get claims
+              const payload = JSON.parse(atob(idToken.tokenValue.split('.')[1]));
+              userName = payload.name || payload.given_name || payload.preferred_username || payload.sub || 'User';
+            } catch (e) {
+              console.log('Could not decode ID token for name extraction');
+            }
+          }
           
           setMessages([{
             id: '1',

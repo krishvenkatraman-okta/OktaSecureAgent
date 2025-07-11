@@ -28,27 +28,36 @@ export class PAMService {
 
   private async generateJWT(): Promise<string> {
     try {
-      console.log('Requesting service token from PAM API...');
+      const serviceTokenUrl = `https://${this.config.domain}/v1/teams/${this.config.teamName}/service_token`;
+      const serviceTokenBody = {
+        key_id: this.config.apiKeyId,
+        key_secret: this.config.apiKeySecret
+      };
+      
+      console.log('=== PAM SERVICE TOKEN REQUEST ===');
+      console.log('Method: POST');
+      console.log('URL:', serviceTokenUrl);
+      console.log('Request Body:', JSON.stringify(serviceTokenBody, null, 2));
+      console.log('=== END SERVICE TOKEN REQUEST ===');
+      
+      console.log('🔑 Requesting service token from PAM API...');
       
       // Use the official PAM service token endpoint
-      const response = await axios.post(
-        `https://${this.config.domain}/v1/teams/${this.config.teamName}/service_token`,
-        {
-          key_id: this.config.apiKeyId,
-          key_secret: this.config.apiKeySecret
+      const response = await axios.post(serviceTokenUrl, serviceTokenBody, {
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      });
 
       const token = response.data.bearer_token;
-      console.log('PAM service token obtained successfully');
+      console.log('✅ PAM service token obtained successfully');
+      console.log('Token preview:', token ? `${token.substring(0, 20)}...` : 'null');
       return token;
     } catch (error) {
-      console.error('Error getting PAM service token:', error.response?.data || error.message);
+      console.error('❌ Error getting PAM service token:');
+      console.error('Error message:', error.message);
+      console.error('Response status:', error.response?.status);
+      console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
       throw new Error('Failed to obtain PAM service token');
     }
   }
@@ -124,11 +133,19 @@ export class PAMService {
       
       return secretValue || 'demo-client-secret-from-pam-vault';
     } catch (error) {
-      console.error('Error retrieving PAM secret:', error.response?.data || error.message);
-      console.error('PAM Error Details:', error.response?.status, error.response?.statusText);
+      console.error('❌ Error retrieving PAM secret:');
+      console.error('Error message:', error.message);
+      console.error('Response status:', error.response?.status);
+      console.error('Response statusText:', error.response?.statusText);
+      console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('Request config:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers
+      });
       
       // For demo purposes, simulate successful PAM reveal that would auto-trigger IGA
-      console.log('PAM API call failed, but simulating successful PAM reveal for demo purposes');
+      console.log('🎭 PAM API call failed, but simulating successful PAM reveal for demo purposes');
       console.log('This would normally auto-trigger IGA approval workflow through Okta PAM system');
       
       // Return a mock client secret for demo - in real scenario this would come from PAM vault

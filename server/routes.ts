@@ -271,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAuditLog({
         sessionId,
         eventType: 'access_approved',
-        eventData: { requestId: requestId.toString(), approverId: 'sarah.chen@acme.com' },
+        eventData: { requestId: requestId.toString(), approverId: 'sarah.chen@acme.com' } as Record<string, any>,
         userId: session.userId,
       });
 
@@ -319,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAuditLog({
         sessionId,
         eventType: 'crm_access',
-        eventData: { contactsCount: contacts.length.toString() },
+        eventData: { contactsCount: contacts.length.toString() } as Record<string, any>,
         userId: session.userId,
       });
 
@@ -378,7 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAuditLog({
         sessionId,
         eventType: 'write_access_request',
-        eventData: { requestedScope: 'crm.write' },
+        eventData: { requestedScope: 'crm.write' } as Record<string, any>,
         userId: session.userId,
       });
 

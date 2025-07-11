@@ -15,8 +15,8 @@ export class OktaService {
     this.config = {
       domain: process.env.OKTA_DOMAIN || 'fcxdemo.okta.com',
       spaClientId: process.env.OKTA_SPA_CLIENT_ID || '0oat46o2xf1bddBxb697',
-      clientCredentialsClientId: process.env.OKTA_CC_CLIENT_ID || '0oat4agvajRwbJlbU697',
-      clientCredentialsClientSecret: process.env.OKTA_CC_CLIENT_SECRET || 'w-duI3IyYtEqlNKsmlR2LaRICXVUUr61sMzYHbeQ2q5_3qeoTTtSETIvzjPPLA9O',
+      clientCredentialsClientId: process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_ID || '0oat4agvajRwbJlbU697',
+      clientCredentialsClientSecret: process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET || 'w-duI3IyYtEqlNKsmlR2LaRICXVUUr61sMzYHbeQ2q5_3qeoTTtSETIvzjPPLA9O',
       apiToken: process.env.OKTA_API_TOKEN || '00R8Oroauby567d6O2oO04L7fYM44fOxj83U9p-ftm',
     };
   }

@@ -1,20 +1,18 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/dist/$1"
-    }
-  ],
   "buildCommand": "vite build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "env": {
+    "SESSION_SECRET": "@session-secret",
+    "OKTA_DOMAIN": "@okta-domain", 
+    "OKTA_SPA_CLIENT_ID": "@okta-spa-client-id",
+    "OKTA_CLIENT_CREDENTIALS_CLIENT_ID": "@okta-client-credentials-client-id",
+    "OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET": "@okta-client-credentials-client-secret",
+    "OKTA_API_TOKEN": "@okta-api-token",
+    "PAM_API_KEY_ID": "@pam-api-key-id",
+    "PAM_API_KEY_SECRET": "@pam-api-key-secret",
+    "PAM_RESOURCE_GROUP_ID": "@pam-resource-group-id",
+    "PAM_PROJECT_ID": "@pam-project-id",
+    "PAM_SECRET_ID": "@pam-secret-id"
+  }
 }

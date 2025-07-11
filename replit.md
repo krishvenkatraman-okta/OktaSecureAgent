@@ -116,6 +116,12 @@ Required environment variables for production deployment:
 - API calls made directly to Okta services from browser
 
 ### Recent Changes
+- **2025-01-11**: Fixed CSS import order by moving @import to top of index.css
+- **2025-01-11**: Fixed TypeScript errors in server/routes.ts for audit log eventData types
+- **2025-01-11**: Added SESSION_SECRET and all required environment variables for deployment
+- **2025-01-11**: Created .env.example with complete environment variable documentation
+- **2025-01-11**: Updated vercel.json for proper static site deployment configuration
+- **2025-01-11**: Standardized environment variable names across all services
 - **2025-01-11**: Configured Vercel deployment with proper build settings
 - **2025-01-11**: Updated environment variable configuration for production
 - **2025-01-11**: Created comprehensive deployment documentation

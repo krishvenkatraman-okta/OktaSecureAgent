@@ -1,0 +1,41 @@
+. User interacts with AI Agent
+* AI Agent: “Can I help you?”
+* User asks a support question
+* ✅ Okta OpenID Connect flow initiated (authenticate user)
+    * Agent uses OIDC SPA flow using clientID 0oat46o2xf1bddBxb697
+    * Returns id_token + access_token with openid, profile scopes
+
+2. User profile fetch by agent
+* AI Agent uses Client Credentials Flow to call Okta /api/v1/users
+    * Requires okta.users.read scope
+    * ✅ User consent gathered prior
+    * Enforces scoped client access, not impersonation yet
+
+3. User requests CRM info on brandon.stark@acme.com
+* Agent prepares to access CRM (Salesforce) data
+* Since user wants to act on behalf of another user, agent must elevate
+✅ PAM + IGA + Just-in-Time Access
+
+    * Agent to use Okta client credentails, ClientID :0oat4agvajRwbJlbU697 and calls Okta PAM secret vault to retreive client secret using /secrets/resource_groups/7b3e9a80-8253-4b42-a4ec-7ddeba77f3da/projects/e9fc2837-32e8-4700-9689-a8d3d3391928/secret/27ab37e0-3fee-442b-8f0f-2cdbd8cfc18e PAM API KeyID: c0e75418-05f5-4c0b-b86a-b4befcbebc25, PAM API keysecret : dTctB7Mg7iYOoeWsOMztuzjcceHhyWoAAstPAQV4fGrM0EWy0Y4vvWjKTXjkGbDMCU1aYiAnpjvrA063f+6Hlg==.
+    * IGA request is automatically submitted by Okta based on PAM policy.
+    * agent keeps trying and waits for approval
+    *  once approved  retreive secret,call the Okta token endpoint using Client Credentials requesting crm.read scope
+    * Token contains:
+        * scope=crm.read
+        * act_as=brandon.stark@acme.com
+✅ Key Benefit:
+This ensures AI agent doesn’t get access by default — access is explicitly approved and tracked and also time bound only 15 mins.
+
+4. Agent calls Salesforce CRM API ( This is a mock API)
+* Uses the access_token with act_as claim
+* CRM honors that this action is delegated and restricted
+
+5. User asks AI to update CRM record
+* Agent cannot proceed with write access by default
+✅ Okta Verify + Dynamic Consent to brandon.stark@acme.com
+* Agent sends Okta Verify push to user
+    * “Approve AI agent to update Salesforce CRM for Brandon Stark?”
+* Once user approves:
+    * Agent requests crm.write scope via Client Credentials Flow
+    * Scope granted (or gated again via IGA if policy requires)
+* Agent performs write to CRM

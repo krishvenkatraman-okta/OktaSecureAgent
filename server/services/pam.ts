@@ -78,11 +78,24 @@ export class PAMService {
       // Step 1: Get the service token
       const bearerToken = await this.generateJWT();
       
-      // Step 2: Make PAM reveal request (this should auto-trigger IGA approval)
-      console.log('Making PAM reveal request - this should auto-trigger IGA approval workflow...');
+      // Step 2: Generate RSA public key for the reveal request
+      // This follows the JWK format required by PAM API for RSA-OAEP-256 encryption
+      const publicKeyJWK = {
+        "kty": "RSA",
+        "alg": "RSA-OAEP-256", 
+        "use": "enc",
+        "key_ops": ["encrypt"],
+        "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
+        "e": "AQAB"
+      };
+
+      // Step 3: Make PAM reveal request with public key (this should auto-trigger IGA approval)
+      console.log('Making PAM reveal request with public key - this should auto-trigger IGA approval workflow...');
       const revealResponse = await axios.post(
         `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}/reveal`,
-        {},
+        {
+          publicKey: publicKeyJWK
+        },
         {
           headers: {
             'Authorization': `Bearer ${bearerToken}`,

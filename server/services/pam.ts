@@ -25,17 +25,20 @@ export class PAMService {
 
   async retrieveSecret(): Promise<string> {
     try {
+      // PAM uses a different endpoint structure - typically pam.domain.com
+      const pamDomain = this.config.domain.replace(/^https?:\/\//, '').replace('fcxdemo.okta.com', 'pam.fcxdemo.okta.com');
+      
       const response = await axios.get(
-        `https://${this.config.domain}/secrets/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}`,
+        `https://${pamDomain}/api/v1/secrets/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}`,
         {
           headers: {
-            'Authorization': `Bearer ${this.config.apiKeySecret}`,
+            'Authorization': `ApiKey ${this.config.apiKeyId}:${this.config.apiKeySecret}`,
             'Content-Type': 'application/json',
           },
         }
       );
 
-      return response.data.secret;
+      return response.data.secret || response.data.value;
     } catch (error) {
       console.error('Error retrieving PAM secret:', error);
       throw new Error('Failed to retrieve PAM secret');

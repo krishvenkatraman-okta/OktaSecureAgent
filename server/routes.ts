@@ -359,21 +359,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Starting PAM/IGA request flow for ${targetUser} with ${requestedScope} scope`);
 
-      // Update workflow to step 3
+      // Update workflow to step 3 (PAM Secret Retrieval)
       await storage.updateWorkflowSession(sessionId, { currentStep: 3 });
 
-      // Step 1: Get user profile with okta.users.read scope
-      console.log('Step 1: Fetching user profile with okta.users.read scope...');
-      try {
-        const clientToken = await oktaService.getClientCredentialsToken(['okta.users.read']);
-        const userProfile = await oktaService.getUserProfile(targetUser.split('@')[0]);
-        console.log('User profile fetched successfully');
-      } catch (error) {
-        console.warn('User profile fetch failed, continuing with mock data:', error);
-      }
-      
-      // Step 2: PAM request for client credentials secret
-      console.log('Step 2: Requesting client credentials from PAM vault...');
+      // Step 1: PAM request for client credentials secret
+      console.log('Step 1: Requesting client credentials from PAM vault...');
       try {
         const pamSecret = await pamService.retrieveSecret();
         console.log('Client credentials retrieved from PAM vault');
@@ -381,11 +371,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn('PAM secret retrieval failed, using environment fallback:', error);
       }
       
-      // Update to step 4 after completing step 3 (user profile + PAM retrieval)
+      // Update to step 4 after completing PAM retrieval
       await storage.updateWorkflowSession(sessionId, { currentStep: 4 });
       
-      // Step 3: Create IGA access request for crm_read scope  
-      console.log('Step 3: Creating IGA access request for crm_read scope...');
+      // Step 2: Create IGA access request for crm_read scope  
+      console.log('Step 2: Creating IGA access request for crm_read scope...');
+      
+      // Step 3: Get user profile with okta.users.read scope (after getting client creds)
+      console.log('Step 3: Fetching user profile with okta.users.read scope...');
+      try {
+        const clientToken = await oktaService.getClientCredentialsToken(['okta.users.read']);
+        const userProfile = await oktaService.getUserProfile(targetUser.split('@')[0]);
+        console.log('User profile fetched successfully');
+      } catch (error) {
+        console.warn('User profile fetch failed, continuing with mock data:', error);
+      }
       const igaRequest = await igaService.createAccessRequest({
         targetUser,
         requestedScope: requestedScope || 'crm_read',

@@ -31,22 +31,23 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
     },
     {
       id: 3,
-      title: 'User Profile + PAM Retrieval',
-      description: 'Fetch user profile (okta.users.read) and retrieve client credentials from PAM vault',
+      title: 'PAM Secret Retrieval',
+      description: 'Retrieve client credentials from PAM vault for elevated access',
       icon: Shield,
       details: {
-        userProfileScope: 'okta.users.read',
         pamSecret: 'OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET',
         pamClientId: '0oat4agvajRwbJlbU697',
+        resourceGroup: 'crm-access-rg',
       },
     },
     {
       id: 4,
-      title: 'IGA Access Request',
-      description: 'Submit IGA approval request for crm_read scope with delegation',
+      title: 'IGA Access Request + User Profile',
+      description: 'Submit IGA approval request for crm_read scope and fetch user profile',
       icon: Key,
       details: {
         requestedScope: 'crm_read',
+        userProfileScope: 'okta.users.read',
         approver: 'Sarah Chen',
       },
     },

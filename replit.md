@@ -118,11 +118,11 @@ Required environment variables for production deployment:
 ### Recent Changes
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
-- **2025-01-11**: Enhanced chatbot to show welcome message after successful authentication
-- **2025-01-11**: Implemented proper PAM/IGA workflow with crm_read scope requests
-- **2025-01-11**: Added retry mechanism for post-approval token retrieval and CRM data access
-- **2025-01-11**: Created client credentials flow with act_as claims for Zero Trust delegation
-- **2025-01-11**: Separated elevated token retrieval from CRM data access for better security flow
+- **2025-01-11**: Enhanced chatbot to show welcome message with user's name from ID token claims
+- **2025-01-11**: Implemented proper PAM secret retrieval with RSA-OAEP-256 encryption and JWE JSON Serialization
+- **2025-01-11**: Added RSA key pair generation for PAM secret encryption/decryption using node-jose
+- **2025-01-11**: Simplified workflow to only make PAM requests - IGA approval auto-triggered by Okta PAM system
+- **2025-01-11**: Removed manual IGA service calls as PAM reveal automatically triggers IGA workflow
 - **2025-01-11**: Added comprehensive audit logging for all PAM/IGA/CRM operations
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

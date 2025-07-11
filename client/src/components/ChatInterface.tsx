@@ -32,12 +32,29 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   // Initialize messages based on authentication state
   React.useEffect(() => {
     if (isAuthenticated && currentStep >= 2) {
-      setMessages([{
-        id: '1',
-        type: 'bot',
-        message: 'Welcome! You\'ve been successfully authenticated. I can help you access CRM data securely. Which user would you like to retrieve data for? (e.g., brandon.stark@acme.com)',
-        timestamp: new Date(),
-      }]);
+      // Fetch user profile to get the name for welcome message
+      fetch(`/api/workflow/${sessionId}`)
+        .then(res => res.json())
+        .then(data => {
+          const idToken = data.tokens?.find((t: any) => t.tokenType === 'id_token');
+          const userName = idToken?.actAs || 'User';
+          
+          setMessages([{
+            id: '1',
+            type: 'bot',
+            message: `Welcome ${userName}! You've been successfully authenticated via Okta OIDC. I can help you access CRM data securely. Which user would you like to retrieve data for? (e.g., brandon.stark@acme.com)`,
+            timestamp: new Date(),
+          }]);
+        })
+        .catch(() => {
+          // Fallback message if user profile fetch fails
+          setMessages([{
+            id: '1',
+            type: 'bot',
+            message: 'Welcome! You\'ve been successfully authenticated. I can help you access CRM data securely. Which user would you like to retrieve data for? (e.g., brandon.stark@acme.com)',
+            timestamp: new Date(),
+          }]);
+        });
     } else {
       setMessages([{
         id: '1',
@@ -46,7 +63,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         timestamp: new Date(),
       }]);
     }
-  }, [isAuthenticated, currentStep]);
+  }, [isAuthenticated, currentStep, sessionId]);
   const [input, setInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 

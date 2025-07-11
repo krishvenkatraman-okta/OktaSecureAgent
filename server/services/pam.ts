@@ -1,4 +1,6 @@
 import axios from 'axios';
+import * as jose from 'node-jose';
+import { randomBytes } from 'crypto';
 
 export interface PAMConfig {
   domain: string;
@@ -12,6 +14,9 @@ export interface PAMConfig {
 
 export class PAMService {
   private config: PAMConfig;
+  private keyStore: any;
+  private privateKey: any;
+  private publicKey: any;
 
   constructor() {
     this.config = {
@@ -23,6 +28,23 @@ export class PAMService {
       projectId: process.env.PAM_PROJECT_ID || '',
       secretId: process.env.PAM_SECRET_ID || '',
     };
+    this.initializeKeys();
+  }
+
+  private async initializeKeys() {
+    try {
+      // Generate RSA 2048-bit key pair for PAM encryption
+      this.keyStore = jose.JWK.createKeyStore();
+      this.privateKey = await this.keyStore.generate('RSA', 2048, {
+        alg: 'RSA-OAEP-256',
+        use: 'enc'
+      });
+      this.publicKey = this.privateKey.toJSON();
+      console.log('Generated RSA key pair for PAM secret encryption');
+    } catch (error) {
+      console.error('Error generating RSA keys:', error);
+      // Continue without keys for demo fallback
+    }
   }
 
   private async generateJWT(): Promise<string> {
@@ -52,9 +74,51 @@ export class PAMService {
     }
   }
 
+  private async getOktaPAMPublicKey(): Promise<any> {
+    try {
+      console.log('Downloading Okta PAM public key for encryption...');
+      const bearerToken = await this.generateJWT();
+      
+      const response = await axios.get(
+        `https://${this.config.domain}/v1/teams/${this.config.teamName}/vault/jwks.json`,
+        {
+          headers: {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const jwks = response.data;
+      const oktaKey = jwks.keys[0]; // Use first key (typically the current one)
+      console.log('Okta PAM public key downloaded successfully');
+      
+      return oktaKey;
+    } catch (error) {
+      console.error('Error downloading Okta PAM public key:', error.response?.data || error.message);
+      throw new Error('Failed to download Okta PAM public key');
+    }
+  }
+
+  private async decryptJWESecret(encryptedJWE: string): Promise<string> {
+    try {
+      console.log('Decrypting JWE secret using private key...');
+      
+      // Parse JWE and decrypt using our private key
+      const decrypted = await jose.JWE.createDecrypt(this.privateKey).decrypt(encryptedJWE);
+      const secretValue = decrypted.payload.toString();
+      
+      console.log('JWE secret successfully decrypted');
+      return secretValue;
+    } catch (error) {
+      console.error('Error decrypting JWE secret:', error);
+      throw new Error('Failed to decrypt JWE secret');
+    }
+  }
+
   async retrieveSecret(): Promise<string> {
     try {
-      console.log('Retrieving client credentials secret from PAM vault...');
+      console.log('Retrieving client credentials secret from PAM vault with RSA encryption...');
       console.log('PAM Config:', {
         domain: this.config.domain,
         teamName: this.config.teamName,
@@ -71,15 +135,34 @@ export class PAMService {
         console.log('Simulating PAM reveal request that would auto-trigger IGA approval workflow...');
         return 'demo-client-secret-from-pam-vault';
       }
+
+      // Ensure keys are initialized
+      if (!this.privateKey) {
+        await this.initializeKeys();
+      }
       
       // Step 1: Get the service token
       const bearerToken = await this.generateJWT();
       
-      // Step 2: Reveal the actual secret value (this should auto-trigger IGA)
-      console.log('Making PAM reveal request - this should auto-trigger IGA approval workflow...');
+      // Step 2: Get Okta PAM public key for encryption
+      const oktaPublicKey = await this.getOktaPAMPublicKey();
+      
+      // Step 3: Create public key JWE for the reveal request (using our public key)
+      const publicKeyJWE = await jose.JWE.createEncrypt({
+        format: 'general', // Use JWE JSON Serialization (full serialization)
+        contentAlg: 'A256GCM',
+        fields: { enc: 'A256GCM', alg: 'RSA-OAEP-256' }
+      }, this.publicKey)
+      .update(JSON.stringify({ publicKey: this.publicKey }))
+      .final();
+      
+      // Step 4: Reveal the secret with our public key for encryption
+      console.log('Making PAM reveal request with RSA public key - this should auto-trigger IGA approval workflow...');
       const revealResponse = await axios.post(
         `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}/reveal`,
-        {},
+        {
+          publicKey: publicKeyJWE
+        },
         {
           headers: {
             'Authorization': `Bearer ${bearerToken}`,
@@ -88,10 +171,16 @@ export class PAMService {
         }
       );
 
-      const secretValue = revealResponse.data.secret_value || revealResponse.data.value;
-      console.log('PAM secret reveal completed - IGA workflow should now be auto-triggered');
+      // Step 5: Decrypt the JWE-encrypted secret
+      const encryptedSecret = revealResponse.data.encryptedSecret || revealResponse.data.secret_value;
+      if (!encryptedSecret) {
+        throw new Error('No encrypted secret returned from PAM API');
+      }
       
-      return secretValue;
+      const decryptedSecret = await this.decryptJWESecret(encryptedSecret);
+      console.log('PAM secret reveal and decryption completed - IGA workflow should now be auto-triggered');
+      
+      return decryptedSecret;
     } catch (error) {
       console.error('Error retrieving PAM secret:', error.response?.data || error.message);
       console.error('PAM Error Details:', error.response?.status, error.response?.statusText);

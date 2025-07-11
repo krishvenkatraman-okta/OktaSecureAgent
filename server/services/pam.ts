@@ -58,22 +58,32 @@ export class PAMService {
   async retrieveSecret(): Promise<string> {
     try {
       console.log('Making PAM reveal request - this will auto-trigger IGA approval workflow...');
+      console.log('=== PAM SERVICE INITIALIZATION ===');
       console.log('PAM Config:', {
         domain: this.config.domain,
         teamName: this.config.teamName,
-        hasApiKeyId: !!this.config.apiKeyId,
-        hasApiKeySecret: !!this.config.apiKeySecret,
-        hasResourceGroupId: !!this.config.resourceGroupId,
-        hasProjectId: !!this.config.projectId,
-        hasSecretId: !!this.config.secretId
+        apiKeyIdLength: this.config.apiKeyId?.length || 0,
+        apiKeySecretLength: this.config.apiKeySecret?.length || 0,
+        resourceGroupId: this.config.resourceGroupId,
+        projectId: this.config.projectId,
+        secretId: this.config.secretId
       });
       
       // Check if all required config is available
-      if (!this.config.apiKeyId || !this.config.apiKeySecret) {
-        console.warn('PAM API credentials not configured, simulating PAM reveal for demo');
-        console.log('Simulating PAM reveal request that would auto-trigger IGA approval workflow...');
+      const missingConfigs = [];
+      if (!this.config.apiKeyId) missingConfigs.push('PAM_API_KEY_ID');
+      if (!this.config.apiKeySecret) missingConfigs.push('PAM_API_KEY_SECRET');
+      if (!this.config.resourceGroupId) missingConfigs.push('PAM_RESOURCE_GROUP_ID');
+      if (!this.config.projectId) missingConfigs.push('PAM_PROJECT_ID');
+      if (!this.config.secretId) missingConfigs.push('PAM_SECRET_ID');
+      
+      if (missingConfigs.length > 0) {
+        console.warn('❌ PAM API credentials missing:', missingConfigs.join(', '));
+        console.log('🎭 Simulating PAM reveal request that would auto-trigger IGA approval workflow...');
         return 'demo-client-secret-from-pam-vault';
       }
+      
+      console.log('✅ All PAM credentials configured - proceeding with REAL PAM API calls');
       
       // Step 1: Get the service token
       const bearerToken = await this.generateJWT();
@@ -104,8 +114,10 @@ export class PAMService {
       console.log('Request Body:', JSON.stringify(requestBody, null, 2));
       console.log('=== END PAM API CALL DETAILS ===');
       
-      console.log('Making PAM reveal request with public key - this should auto-trigger IGA approval workflow...');
+      console.log('🚀 Making REAL PAM reveal request with public key - this should auto-trigger IGA approval workflow...');
+      console.log('📡 Sending request to Okta PAM API...');
       const revealResponse = await axios.post(pamApiUrl, requestBody, { headers: requestHeaders });
+      console.log('✅ PAM API responded with status:', revealResponse.status);
 
       const secretValue = revealResponse.data.secret_value || revealResponse.data.value || revealResponse.data.encryptedSecret;
       console.log('PAM secret reveal completed - IGA workflow should now be auto-triggered');

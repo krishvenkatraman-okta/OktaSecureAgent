@@ -84,11 +84,11 @@ The application uses Drizzle ORM with PostgreSQL, featuring these main tables:
 
 ## Deployment Strategy
 
-### Vercel Deployment
-The application is optimized for Vercel deployment as a static site:
-- **Build Command**: `vite build` - Creates optimized frontend bundle
-- **Output Directory**: `dist` - Static assets served by Vercel CDN
-- **Framework**: Static site with client-side routing
+### Replit Deployment
+The application is designed as a full-stack Node.js application that serves both frontend and backend:
+- **Server**: Express.js serves the React frontend and provides API endpoints
+- **Build Process**: Vite builds frontend, esbuild bundles server
+- **Single Port**: Frontend and backend run on the same port with Vite integration
 
 ### Environment Configuration
 Required environment variables for production deployment:
@@ -104,16 +104,16 @@ Required environment variables for production deployment:
 - `PAM_SECRET_ID`: PAM secret identifier
 
 ### Build Process
-- Frontend builds to `dist/` for static serving
-- Vite optimizes and bundles React application
-- Static assets served via Vercel's global CDN
-- Client-side routing handles navigation
+- Frontend builds with Vite to create optimized React bundle
+- Backend compiles with esbuild to single Node.js file
+- Express server serves both static assets and API routes
+- WebSocket support for real-time workflow updates
 
 ### Security Considerations
-- All sensitive configuration through Vercel environment variables
-- Static site security with no exposed server endpoints
-- Client-side authentication with Okta OIDC
-- API calls made directly to Okta services from browser
+- Environment variables configured through Replit secrets
+- Express server handles authentication and API proxy
+- Session management through in-memory storage
+- API calls proxied through backend for security
 
 ### Recent Changes
 - **2025-01-11**: Fixed CSS import order by moving @import to top of index.css

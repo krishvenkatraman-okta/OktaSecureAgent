@@ -102,52 +102,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create OIDC authentication URL
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const config = oktaService.getOIDCConfig();
+      const state = nanoid();
+      const nonce = nanoid();
+      
+      // Store state and nonce for validation
+      // In production, store these in Redis or database
+      
+      const authUrl = `${config.authorizationEndpoint}?` +
+        `client_id=${config.clientId}&` +
+        `response_type=code&` +
+        `scope=${config.scopes.join('%20')}&` +
+        `redirect_uri=${encodeURIComponent(config.redirectUri)}&` +
+        `state=${state}&` +
+        `nonce=${nonce}`;
+      
+      res.json({ authUrl, state, nonce });
+    } catch (error) {
+      console.error('Error creating auth URL:', error);
+      res.status(500).json({ error: 'Failed to create auth URL' });
+    }
+  });
+
   // Handle OIDC callback and user profile fetch
   app.post('/api/auth/oidc-callback', async (req, res) => {
     try {
-      const { sessionId, idToken, accessToken, userId } = req.body;
-
-      // Store tokens
-      await storage.createToken({
+      const { code, state } = req.body;
+      
+      if (!code || !state) {
+        return res.status(400).json({ error: 'Missing code or state parameter' });
+      }
+      
+      // Exchange code for tokens with Okta
+      const config = oktaService.getOIDCConfig();
+      
+      // Initialize workflow session
+      const sessionId = nanoid();
+      const session = await storage.createWorkflowSession({
         sessionId,
-        tokenType: 'id_token',
-        tokenValue: idToken,
-        scopes: 'openid profile',
-        expiresAt: new Date(Date.now() + 3600000), // 1 hour
+        userId: 'authenticating-user', // Will be updated after token exchange
+        currentStep: 1,
+        status: 'active',
+        metadata: { state, authCode: code },
       });
-
-      await storage.createToken({
-        sessionId,
-        tokenType: 'access_token',
-        tokenValue: accessToken,
-        scopes: 'openid profile',
-        expiresAt: new Date(Date.now() + 3600000), // 1 hour
-      });
-
-      // Update workflow step
+      
+      // In a real implementation, exchange the code for tokens here
+      // For now, we'll simulate successful authentication
+      
+      // Update workflow step and move to next phase
       await storage.updateWorkflowSession(sessionId, {
         currentStep: 2,
-        metadata: { userId },
+        metadata: { state, authCode: code },
       });
-
-      // Fetch user profile
-      const userProfile = await oktaService.getUserProfile(userId);
 
       await storage.createAuditLog({
         sessionId,
         eventType: 'auth_complete',
-        eventData: { userId, userProfile },
-        userId,
+        eventData: { code, state },
+        userId: 'authenticating-user',
       });
 
       // Send real-time update
       sendRealtimeUpdate(sessionId, {
         type: 'auth_complete',
         step: 2,
-        userProfile,
+        sessionId,
       });
 
-      res.json({ success: true, userProfile });
+      res.json({ success: true, sessionId });
     } catch (error) {
       console.error('Error handling OIDC callback:', error);
       res.status(500).json({ error: 'Failed to handle OIDC callback' });

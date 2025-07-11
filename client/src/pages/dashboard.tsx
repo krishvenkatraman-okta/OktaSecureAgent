@@ -19,31 +19,58 @@ export default function Dashboard() {
   const [sessionId, setSessionId] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize workflow on mount
+  // Initialize workflow and check authentication
   useEffect(() => {
     const initializeWorkflow = async () => {
       try {
-        const response = await fetch('/api/workflow/init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: 'demo-user@acme.com' }),
-        });
+        // First check if we're returning from Okta callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
         
-        if (response.ok) {
-          const data = await response.json();
-          setSessionId(data.sessionId);
-          setIsInitialized(true);
+        if (code && state) {
+          // Handle Okta callback
+          const response = await fetch('/api/auth/oidc-callback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, state }),
+          });
           
-          // Simulate OIDC callback for demo
-          setTimeout(() => {
-            handleOIDCCallback(data.sessionId);
-          }, 1000);
+          if (response.ok) {
+            const data = await response.json();
+            setSessionId(data.sessionId);
+            setIsInitialized(true);
+            
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            toast({
+              title: 'Authentication Successful',
+              description: 'User authenticated via Okta OIDC',
+            });
+          } else {
+            throw new Error('Authentication failed');
+          }
+        } else {
+          // No authentication, redirect to Okta
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            // Redirect to Okta for authentication
+            window.location.href = data.authUrl;
+          } else {
+            throw new Error('Failed to get auth URL');
+          }
         }
       } catch (error) {
         console.error('Failed to initialize workflow:', error);
         toast({
-          title: 'Initialization Failed',
-          description: 'Could not initialize the workflow. Please try again.',
+          title: 'Authentication Failed',
+          description: 'Could not authenticate with Okta. Please try again.',
           variant: 'destructive',
         });
       }

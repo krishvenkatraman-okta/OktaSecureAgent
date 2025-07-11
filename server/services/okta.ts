@@ -120,7 +120,7 @@ export class OktaService {
       jwksUri: 'https://fcxdemo.okta.com/oauth2/default/v1/keys',
       domain: this.config.domain,
       clientId: this.config.spaClientId,
-      redirectUri: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/callback`,
+      redirectUri: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}`,
       scopes: ['openid', 'profile', 'email'],
     };
   }

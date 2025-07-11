@@ -1,10 +1,10 @@
 import axios from 'axios';
+import { pamService } from './pam';
 
 export interface OktaConfig {
   domain: string;
   spaClientId: string;
   clientCredentialsClientId: string;
-  clientCredentialsClientSecret: string;
   apiToken: string;
 }
 
@@ -16,13 +16,15 @@ export class OktaService {
       domain: process.env.OKTA_DOMAIN || 'fcxdemo.okta.com',
       spaClientId: process.env.OKTA_SPA_CLIENT_ID || '0oat46o2xf1bddBxb697',
       clientCredentialsClientId: process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_ID || '0oat4agvajRwbJlbU697',
-      clientCredentialsClientSecret: process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET || 'w-duI3IyYtEqlNKsmlR2LaRICXVUUr61sMzYHbeQ2q5_3qeoTTtSETIvzjPPLA9O',
       apiToken: process.env.OKTA_API_TOKEN || '00R8Oroauby567d6O2oO04L7fYM44fOxj83U9p-ftm',
     };
   }
 
   async getClientCredentialsToken(scopes: string[] = ['okta.users.read']): Promise<string> {
     try {
+      // Retrieve client secret from PAM vault - Zero Trust principle
+      const clientSecret = await pamService.retrieveSecret();
+      
       const response = await axios.post(
         `https://${this.config.domain}/oauth2/v1/token`,
         new URLSearchParams({
@@ -32,7 +34,7 @@ export class OktaService {
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${this.config.clientCredentialsClientId}:${this.config.clientCredentialsClientSecret}`).toString('base64')}`,
+            'Authorization': `Basic ${Buffer.from(`${this.config.clientCredentialsClientId}:${clientSecret}`).toString('base64')}`,
           },
         }
       );

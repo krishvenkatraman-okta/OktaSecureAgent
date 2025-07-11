@@ -413,7 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAuditLog({
         sessionId,
         eventType: 'pam_secret_reveal',
-        eventData: { targetUser, requestedScope, auto_iga_trigger: true },
+        eventData: { targetUser, requestedScope, auto_iga_trigger: true } as any,
         userId: session.userId,
       });
 

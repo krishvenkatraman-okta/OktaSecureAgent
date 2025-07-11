@@ -45,7 +45,13 @@ export default function Dashboard() {
             setSessionId(data.sessionId);
             setIsInitialized(true);
             setIsAuthenticated(true);
-            setCurrentStep(2);
+            
+            // Fetch the updated workflow state to get current step
+            const workflowResponse = await fetch(`/api/workflow/${data.sessionId}`);
+            if (workflowResponse.ok) {
+              const workflowData = await workflowResponse.json();
+              setCurrentStep(workflowData.session.currentStep);
+            }
             
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -275,7 +281,7 @@ export default function Dashboard() {
               onTriggerAuth={triggerAuthentication}
               onRequestAccess={handleRequestAccess}
               isAuthenticated={isAuthenticated}
-              currentStep={currentStep}
+              currentStep={workflowCurrentStep}
             />
           </div>
           

@@ -2,6 +2,7 @@ import axios from 'axios';
 
 export interface PAMConfig {
   domain: string;
+  teamName: string;
   apiKeyId: string;
   apiKeySecret: string;
   resourceGroupId: string;
@@ -14,31 +15,89 @@ export class PAMService {
 
   constructor() {
     this.config = {
-      domain: process.env.OKTA_DOMAIN || 'fcxdemo.okta.com',
-      apiKeyId: process.env.PAM_API_KEY_ID || 'c0e75418-05f5-4c0b-b86a-b4befcbebc25',
-      apiKeySecret: process.env.PAM_API_KEY_SECRET || 'dTctB7Mg7iYOoeWsOMztuzjcceHhyWoAAstPAQV4fGrM0EWy0Y4vvWjKTXjkGbDMCU1aYiAnpjvrA063f+6Hlg==',
-      resourceGroupId: process.env.PAM_RESOURCE_GROUP_ID || '7b3e9a80-8253-4b42-a4ec-7ddeba77f3da',
-      projectId: process.env.PAM_PROJECT_ID || 'e9fc2837-32e8-4700-9689-a8d3d3391928',
-      secretId: process.env.PAM_SECRET_ID || '27ab37e0-3fee-442b-8f0f-2cdbd8cfc18e',
+      domain: 'fcxdemo.pam.okta.com',
+      teamName: 'fcxdemo',
+      apiKeyId: process.env.PAM_API_KEY_ID || '',
+      apiKeySecret: process.env.PAM_API_KEY_SECRET || '',
+      resourceGroupId: process.env.PAM_RESOURCE_GROUP_ID || '',
+      projectId: process.env.PAM_PROJECT_ID || '',
+      secretId: process.env.PAM_SECRET_ID || '',
     };
   }
 
-  async retrieveSecret(): Promise<string> {
+  private async generateJWT(): Promise<string> {
     try {
-      const response = await axios.get(
-        `https://fcxdemo.pam.okta.com/v1/teams/fcxdemo/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}`,
+      console.log('Requesting service token from PAM API...');
+      
+      // Use the official PAM service token endpoint
+      const response = await axios.post(
+        `https://${this.config.domain}/v1/teams/${this.config.teamName}/service_token`,
+        {
+          key_id: this.config.apiKeyId,
+          key_secret: this.config.apiKeySecret
+        },
         {
           headers: {
-            'Authorization': `Bearer ${this.config.apiKeySecret}`,
             'Content-Type': 'application/json',
           },
         }
       );
 
-      return response.data.secret || response.data.value;
+      const token = response.data.bearer_token;
+      console.log('PAM service token obtained successfully');
+      return token;
     } catch (error) {
-      console.error('Error retrieving PAM secret:', error);
-      throw new Error('Failed to retrieve PAM secret');
+      console.error('Error getting PAM service token:', error.response?.data || error.message);
+      throw new Error('Failed to obtain PAM service token');
+    }
+  }
+
+  async retrieveSecret(): Promise<string> {
+    try {
+      console.log('Retrieving client credentials secret from PAM vault...');
+      
+      // Step 1: Get the secret metadata
+      const bearerToken = await this.generateJWT();
+      
+      const secretResponse = await axios.get(
+        `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('Secret metadata retrieved, now revealing secret value...');
+
+      // Step 2: Reveal the actual secret value
+      const revealResponse = await axios.post(
+        `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}/reveal`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const secretValue = revealResponse.data.secret_value || revealResponse.data.value;
+      console.log('PAM secret successfully retrieved');
+      
+      return secretValue;
+    } catch (error) {
+      console.error('Error retrieving PAM secret:', error.response?.data || error.message);
+      
+      // Fallback to environment variable for demo
+      const fallbackSecret = process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET;
+      if (fallbackSecret) {
+        console.log('Using fallback client credentials from environment');
+        return fallbackSecret;
+      }
+      
+      throw new Error('Failed to retrieve PAM secret and no fallback available');
     }
   }
 

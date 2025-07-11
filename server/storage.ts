@@ -1,0 +1,164 @@
+import {
+  workflowSessions,
+  accessRequests,
+  tokenStore,
+  auditLogs,
+  notifications,
+  type WorkflowSession,
+  type InsertWorkflowSession,
+  type AccessRequest,
+  type InsertAccessRequest,
+  type TokenStore,
+  type InsertToken,
+  type AuditLog,
+  type InsertAuditLog,
+  type Notification,
+  type InsertNotification
+} from "@shared/schema";
+
+export interface IStorage {
+  // Workflow Sessions
+  createWorkflowSession(session: InsertWorkflowSession): Promise<WorkflowSession>;
+  getWorkflowSession(sessionId: string): Promise<WorkflowSession | undefined>;
+  updateWorkflowSession(sessionId: string, updates: Partial<WorkflowSession>): Promise<WorkflowSession | undefined>;
+  
+  // Access Requests
+  createAccessRequest(request: InsertAccessRequest): Promise<AccessRequest>;
+  getAccessRequest(id: number): Promise<AccessRequest | undefined>;
+  getAccessRequestsBySession(sessionId: string): Promise<AccessRequest[]>;
+  updateAccessRequest(id: number, updates: Partial<AccessRequest>): Promise<AccessRequest | undefined>;
+  
+  // Token Store
+  createToken(token: InsertToken): Promise<TokenStore>;
+  getToken(sessionId: string, tokenType: string): Promise<TokenStore | undefined>;
+  getTokensBySession(sessionId: string): Promise<TokenStore[]>;
+  deleteToken(id: number): Promise<void>;
+  
+  // Audit Logs
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogsBySession(sessionId: string): Promise<AuditLog[]>;
+  
+  // Notifications
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotificationsBySession(sessionId: string): Promise<Notification[]>;
+}
+
+export class MemStorage implements IStorage {
+  private workflowSessions: Map<string, WorkflowSession> = new Map();
+  private accessRequests: Map<number, AccessRequest> = new Map();
+  private tokenStore: Map<number, TokenStore> = new Map();
+  private auditLogs: Map<number, AuditLog> = new Map();
+  private notifications: Map<number, Notification> = new Map();
+  
+  private workflowSessionId = 1;
+  private accessRequestId = 1;
+  private tokenId = 1;
+  private auditLogId = 1;
+  private notificationId = 1;
+
+  async createWorkflowSession(session: InsertWorkflowSession): Promise<WorkflowSession> {
+    const newSession: WorkflowSession = {
+      ...session,
+      id: this.workflowSessionId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.workflowSessions.set(session.sessionId, newSession);
+    return newSession;
+  }
+
+  async getWorkflowSession(sessionId: string): Promise<WorkflowSession | undefined> {
+    return this.workflowSessions.get(sessionId);
+  }
+
+  async updateWorkflowSession(sessionId: string, updates: Partial<WorkflowSession>): Promise<WorkflowSession | undefined> {
+    const session = this.workflowSessions.get(sessionId);
+    if (!session) return undefined;
+    
+    const updatedSession = { ...session, ...updates, updatedAt: new Date() };
+    this.workflowSessions.set(sessionId, updatedSession);
+    return updatedSession;
+  }
+
+  async createAccessRequest(request: InsertAccessRequest): Promise<AccessRequest> {
+    const newRequest: AccessRequest = {
+      ...request,
+      id: this.accessRequestId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.accessRequests.set(newRequest.id, newRequest);
+    return newRequest;
+  }
+
+  async getAccessRequest(id: number): Promise<AccessRequest | undefined> {
+    return this.accessRequests.get(id);
+  }
+
+  async getAccessRequestsBySession(sessionId: string): Promise<AccessRequest[]> {
+    return Array.from(this.accessRequests.values()).filter(req => req.sessionId === sessionId);
+  }
+
+  async updateAccessRequest(id: number, updates: Partial<AccessRequest>): Promise<AccessRequest | undefined> {
+    const request = this.accessRequests.get(id);
+    if (!request) return undefined;
+    
+    const updatedRequest = { ...request, ...updates, updatedAt: new Date() };
+    this.accessRequests.set(id, updatedRequest);
+    return updatedRequest;
+  }
+
+  async createToken(token: InsertToken): Promise<TokenStore> {
+    const newToken: TokenStore = {
+      ...token,
+      id: this.tokenId++,
+      createdAt: new Date(),
+    };
+    this.tokenStore.set(newToken.id, newToken);
+    return newToken;
+  }
+
+  async getToken(sessionId: string, tokenType: string): Promise<TokenStore | undefined> {
+    return Array.from(this.tokenStore.values()).find(
+      token => token.sessionId === sessionId && token.tokenType === tokenType
+    );
+  }
+
+  async getTokensBySession(sessionId: string): Promise<TokenStore[]> {
+    return Array.from(this.tokenStore.values()).filter(token => token.sessionId === sessionId);
+  }
+
+  async deleteToken(id: number): Promise<void> {
+    this.tokenStore.delete(id);
+  }
+
+  async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
+    const newLog: AuditLog = {
+      ...log,
+      id: this.auditLogId++,
+      timestamp: new Date(),
+    };
+    this.auditLogs.set(newLog.id, newLog);
+    return newLog;
+  }
+
+  async getAuditLogsBySession(sessionId: string): Promise<AuditLog[]> {
+    return Array.from(this.auditLogs.values()).filter(log => log.sessionId === sessionId);
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const newNotification: Notification = {
+      ...notification,
+      id: this.notificationId++,
+      createdAt: new Date(),
+    };
+    this.notifications.set(newNotification.id, newNotification);
+    return newNotification;
+  }
+
+  async getNotificationsBySession(sessionId: string): Promise<Notification[]> {
+    return Array.from(this.notifications.values()).filter(notif => notif.sessionId === sessionId);
+  }
+}
+
+export const storage = new MemStorage();

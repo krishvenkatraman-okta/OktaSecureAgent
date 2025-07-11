@@ -22,37 +22,43 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
     },
     {
       id: 2,
-      title: 'User Profile Fetch',
-      description: 'Agent retrieved user profile using Client Credentials flow',
+      title: 'Agent Welcome',
+      description: 'AI Agent authenticated and ready to serve',
       icon: User,
       details: {
-        endpoint: '/api/v1/users - okta.users.read scope',
+        status: 'Ready for CRM access requests',
       },
     },
     {
       id: 3,
-      title: 'PAM + IGA Access Request',
-      description: 'Requesting elevated access to CRM data for brandon.stark@acme.com',
+      title: 'User Profile + PAM Retrieval',
+      description: 'Fetch user profile (okta.users.read) and retrieve client credentials from PAM vault',
       icon: Shield,
       details: {
-        targetUser: 'brandon.stark@acme.com',
-        requestedScope: 'crm.read',
+        userProfileScope: 'okta.users.read',
+        pamSecret: 'OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET',
         pamClientId: '0oat4agvajRwbJlbU697',
       },
     },
     {
       id: 4,
-      title: 'Just-in-Time Access',
-      description: 'Time-bounded token (15 minutes) with act_as delegation',
+      title: 'IGA Access Request',
+      description: 'Submit IGA approval request for crm_read scope with delegation',
       icon: Key,
-      details: {},
+      details: {
+        requestedScope: 'crm_read',
+        approver: 'Sarah Chen',
+      },
     },
     {
       id: 5,
       title: 'CRM Data Access',
       description: 'Access Salesforce CRM API with delegated permissions',
       icon: Database,
-      details: {},
+      details: {
+        endpoint: '/crm/contacts',
+        delegation: 'act_as claim',
+      },
     },
   ];
 
@@ -87,12 +93,16 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
     }
   };
 
-  const getStepBadge = (status: string) => {
+  const getStepBadge = (status: string, stepId: number) => {
     switch (status) {
       case 'completed':
         return <Badge className="bg-success text-white">COMPLETED</Badge>;
       case 'current':
-        return <Badge className="bg-warning text-white">PENDING APPROVAL</Badge>;
+        if (stepId === 3) {
+          return <Badge className="bg-warning text-white">PENDING APPROVAL</Badge>;
+        } else {
+          return <Badge className="bg-warning text-white">IN PROGRESS</Badge>;
+        }
       default:
         return <Badge className="bg-neutral-100 text-neutral-600">WAITING</Badge>;
     }
@@ -129,7 +139,7 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-1">
                     <h3 className="font-medium text-neutral-900">{step.title}</h3>
-                    {getStepBadge(status)}
+                    {getStepBadge(status, step.id)}
                   </div>
                   <p className="text-sm text-neutral-600 mb-2">{step.description}</p>
                   {Object.keys(step.details).length > 0 && (

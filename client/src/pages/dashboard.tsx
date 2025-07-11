@@ -19,6 +19,8 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [sessionId, setSessionId] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   // Initialize workflow session without authentication
   useEffect(() => {
@@ -42,13 +44,15 @@ export default function Dashboard() {
             const data = await response.json();
             setSessionId(data.sessionId);
             setIsInitialized(true);
+            setIsAuthenticated(true);
+            setCurrentStep(2);
             
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
             
             toast({
               title: 'Authentication Successful',
-              description: 'User authenticated via Okta OIDC',
+              description: 'Welcome! You are now authenticated via Okta OIDC.',
             });
           } else {
             throw new Error('Authentication failed');
@@ -223,7 +227,7 @@ export default function Dashboard() {
     );
   }
 
-  const currentStep = workflowState?.session?.currentStep || 1;
+  const workflowCurrentStep = workflowState?.session?.currentStep || 1;
   const accessRequests = workflowState?.accessRequests || [];
   const tokens = workflowState?.tokens || [];
   const auditLogs = workflowState?.auditLogs || [];
@@ -269,7 +273,7 @@ export default function Dashboard() {
             <ChatInterface 
               sessionId={sessionId} 
               onTriggerAuth={triggerAuthentication}
-              isAuthenticated={currentStep >= 2}
+              isAuthenticated={isAuthenticated}
               currentStep={currentStep}
             />
           </div>
@@ -277,15 +281,15 @@ export default function Dashboard() {
           {/* Right Column: Workflow Status */}
           <div className="space-y-6">
             <WorkflowTimeline
-              currentStep={currentStep}
+              currentStep={workflowCurrentStep}
               sessionId={sessionId}
               userId={workflowState?.session?.userId}
             />
             
-            <APIStatus currentStep={currentStep} tokens={tokens} />
+            <APIStatus currentStep={workflowCurrentStep} tokens={tokens} />
             
             {/* Show "Request Access" button when ready */}
-            {currentStep === 2 && (
+            {workflowCurrentStep === 2 && (
               <Card className="bg-white rounded-xl shadow-sm border border-neutral-100">
                 <CardContent className="pt-6">
                   <div className="text-center">
@@ -317,7 +321,7 @@ export default function Dashboard() {
 
           {/* Right Column: Status Panel */}
           <div className="space-y-6">
-            <CurrentRequest accessRequests={accessRequests} currentStep={currentStep} />
+            <CurrentRequest accessRequests={accessRequests} currentStep={workflowCurrentStep} />
             <LiveNotifications notifications={notifications} auditLogs={auditLogs} />
             <TechnicalDetails tokens={tokens} sessionId={sessionId} />
           </div>
@@ -332,7 +336,7 @@ export default function Dashboard() {
             isSimulatingApproval={isSimulatingApproval}
             isRequestingWriteAccess={isRequestingWriteAccess}
             isResetting={isResetting}
-            currentStep={currentStep}
+            currentStep={workflowCurrentStep}
           />
         </div>
       </div>

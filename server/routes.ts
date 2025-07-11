@@ -174,14 +174,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const tokens = await tokenResponse.json();
         
-        // Initialize workflow session
+        // Initialize workflow session and mark as authenticated (step 2)
         const sessionId = nanoid();
         const session = await storage.createWorkflowSession({
           sessionId,
           userId: 'authenticated-user',
           currentStep: 2,
           status: 'active',
-          metadata: { state, authCode: code, authenticated: true } as any,
+          metadata: { state, authCode: code, authenticated: true, skipUserProfileFetch: true } as any,
         });
 
         // Store tokens
@@ -227,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userId: 'authenticated-user',
           currentStep: 2,
           status: 'active',
-          metadata: { state, authCode: code, authenticated: true, mockAuth: true } as any,
+          metadata: { state, authCode: code, authenticated: true, mockAuth: true, skipUserProfileFetch: true } as any,
         });
 
         res.json({ success: true, sessionId, authenticated: true, mock: true });
@@ -359,11 +359,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Starting PAM/IGA request flow for ${targetUser} with ${requestedScope} scope`);
 
-      // Step 1: PAM request for client credentials secret
-      console.log('Step 1: Requesting client credentials from PAM vault...');
+      // Update workflow to step 3
+      await storage.updateWorkflowSession(sessionId, { currentStep: 3 });
+
+      // Step 1: Get user profile with okta.users.read scope
+      console.log('Step 1: Fetching user profile with okta.users.read scope...');
+      try {
+        const clientToken = await oktaService.getClientCredentialsToken(['okta.users.read']);
+        const userProfile = await oktaService.getUserProfile(targetUser.split('@')[0]);
+        console.log('User profile fetched successfully');
+      } catch (error) {
+        console.warn('User profile fetch failed, continuing with mock data:', error);
+      }
       
-      // Step 2: Create IGA access request for crm_read scope
-      console.log('Step 2: Creating IGA access request...');
+      // Step 2: PAM request for client credentials secret
+      console.log('Step 2: Requesting client credentials from PAM vault...');
+      try {
+        const pamSecret = await pamService.retrieveSecret();
+        console.log('Client credentials retrieved from PAM vault');
+      } catch (error) {
+        console.warn('PAM secret retrieval failed, using environment fallback:', error);
+      }
+      
+      // Update to step 4 after completing step 3 (user profile + PAM retrieval)
+      await storage.updateWorkflowSession(sessionId, { currentStep: 4 });
+      
+      // Step 3: Create IGA access request for crm_read scope  
+      console.log('Step 3: Creating IGA access request for crm_read scope...');
       const igaRequest = await igaService.createAccessRequest({
         targetUser,
         requestedScope: requestedScope || 'crm_read',
@@ -381,9 +403,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         justification,
       });
 
-      // Update workflow step
+      // Keep at step 4 for IGA approval
       await storage.updateWorkflowSession(sessionId, {
-        currentStep: 3,
+        currentStep: 4,
         metadata: { ...session.metadata, igaRequestId: igaRequest.id },
       });
 
@@ -416,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send real-time update
       sendRealtimeUpdate(sessionId, {
         type: 'access_request_submitted',
-        step: 3,
+        step: 4,
         accessRequest,
       });
 

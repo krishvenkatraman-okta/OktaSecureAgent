@@ -25,8 +25,8 @@ export class PAMService {
 
   async retrieveSecret(): Promise<string> {
     try {
-      // PAM uses a different endpoint structure - typically pam.domain.com
-      const pamDomain = this.config.domain.replace(/^https?:\/\//, '').replace('fcxdemo.okta.com', 'pam.fcxdemo.okta.com');
+      // PAM uses fcxdemo.pam.okta.com endpoint structure
+      const pamDomain = this.config.domain.replace(/^https?:\/\//, '').replace('fcxdemo.okta.com', 'fcxdemo.pam.okta.com');
       
       const response = await axios.get(
         `https://${pamDomain}/api/v1/secrets/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}`,

@@ -31,10 +31,11 @@ export default function Dashboard() {
         
         if (code && state) {
           // Handle Okta callback
+          const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
           const response = await fetch('/api/auth/oidc-callback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, state }),
+            body: JSON.stringify({ code, state, codeVerifier }),
           });
           
           if (response.ok) {
@@ -99,6 +100,11 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json();
         console.log('Auth URL received:', data.authUrl);
+        
+        // Store PKCE code verifier for token exchange
+        if (data.codeVerifier) {
+          sessionStorage.setItem('pkce_code_verifier', data.codeVerifier);
+        }
         
         toast({
           title: 'Redirecting to Okta',

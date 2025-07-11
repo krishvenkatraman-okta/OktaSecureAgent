@@ -238,47 +238,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get CRM data with elevated token
-  app.post('/api/workflow/:sessionId/get-crm-data', async (req, res) => {
+  // Get elevated token with client credentials flow
+  app.post('/api/workflow/:sessionId/get-elevated-token', async (req, res) => {
     try {
       const { sessionId } = req.params;
+      const { targetUser, requestedScope } = req.body;
       
-      // Get elevated token from PAM
-      const elevatedToken = await pamService.getElevatedToken(['crm.read'], 'brandon.stark@acme.com');
+      console.log(`Step 1: Retrieving client credentials from PAM vault...`);
+      
+      // Step 1: Get client credentials secret from PAM
+      const clientSecret = await pamService.retrieveSecret();
+      console.log(`PAM client credentials retrieved successfully`);
+      
+      // Step 2: Use client credentials to get access token with crm_read scope and act_as claim
+      console.log(`Step 2: Requesting access token with ${requestedScope} scope and act_as claim for ${targetUser}...`);
+      const elevatedToken = await pamService.getElevatedToken([requestedScope], targetUser);
       
       // Store elevated token
       await storage.createToken({
         sessionId,
         tokenType: 'elevated_access',
         tokenValue: elevatedToken,
-        scopes: 'crm.read',
+        scopes: requestedScope,
         expiresAt: new Date(Date.now() + 3600000),
-        actAs: 'brandon.stark@acme.com'
+        actAs: targetUser
       });
       
-      // Get CRM data
-      const crmData = await crmService.getContacts('brandon.stark@acme.com', elevatedToken);
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'elevated_token_obtained',
+        eventData: { targetUser, scope: requestedScope, tokenType: 'client_credentials_with_act_as' } as any,
+        userId: 'ai-agent',
+      });
+      
+      // Update workflow step
+      await storage.updateWorkflowSession(sessionId, {
+        currentStep: 4,
+        metadata: { elevatedTokenObtained: true, actingAs: targetUser } as any,
+      });
+      
+      sendRealtimeUpdate(sessionId, {
+        type: 'elevated_token_obtained',
+        step: 4,
+        actingAs: targetUser,
+        scope: requestedScope
+      });
+      
+      res.json({ 
+        success: true, 
+        actingAs: targetUser,
+        scope: requestedScope,
+        token: elevatedToken.substring(0, 20) + '...' // Show partial token for demo
+      });
+    } catch (error) {
+      console.error('Error getting elevated token:', error);
+      res.status(500).json({ error: 'Failed to get elevated token' });
+    }
+  });
+
+  // Get CRM data using elevated token
+  app.post('/api/workflow/:sessionId/get-crm-data', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { targetUser } = req.body;
+      
+      // Get stored elevated token
+      const storedToken = await storage.getToken(sessionId, 'elevated_access');
+      if (!storedToken) {
+        return res.status(400).json({ error: 'No elevated token found. Please retry after approval.' });
+      }
+      
+      console.log(`Accessing CRM data for ${targetUser} using elevated token with act_as claim`);
+      
+      // Get CRM data using elevated token
+      const crmData = await crmService.getContacts(targetUser, storedToken.tokenValue);
       const contact = crmData[0]; // Get first contact
       
       await storage.createAuditLog({
         sessionId,
         eventType: 'crm_data_access',
-        eventData: { actAs: 'brandon.stark@acme.com', contactId: contact?.id } as any,
+        eventData: { actAs: targetUser, contactId: contact?.id, tokenUsed: true } as any,
         userId: 'ai-agent',
+      });
+      
+      // Update workflow step
+      await storage.updateWorkflowSession(sessionId, {
+        currentStep: 5,
+        metadata: { crmDataRetrieved: true, actingAs: targetUser } as any,
       });
       
       sendRealtimeUpdate(sessionId, {
         type: 'crm_data_retrieved',
-        step: 4,
-        actingAs: 'brandon.stark@acme.com',
+        step: 5,
+        actingAs: targetUser,
         contact
       });
       
       res.json({ 
         success: true, 
-        actingAs: 'brandon.stark@acme.com',
+        actingAs: targetUser,
         contact,
-        elevatedToken: elevatedToken.substring(0, 20) + '...' // Show partial token for demo
+        tokenScope: storedToken.scopes
       });
     } catch (error) {
       console.error('Error getting CRM data:', error);

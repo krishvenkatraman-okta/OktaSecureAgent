@@ -116,14 +116,13 @@ Required environment variables for production deployment:
 - API calls proxied through backend for security
 
 ### Recent Changes
-- **2025-01-11**: Fixed CSS import order by moving @import to top of index.css
-- **2025-01-11**: Fixed TypeScript errors in server/routes.ts for audit log eventData types
-- **2025-01-11**: Added SESSION_SECRET and all required environment variables for deployment
-- **2025-01-11**: Created .env.example with complete environment variable documentation
-- **2025-01-11**: Updated vercel.json for proper static site deployment configuration
-- **2025-01-11**: Standardized environment variable names across all services
-- **2025-01-11**: Configured Vercel deployment with proper build settings
-- **2025-01-11**: Updated environment variable configuration for production
-- **2025-01-11**: Created comprehensive deployment documentation
+- **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
+- **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
+- **2025-01-11**: Enhanced chatbot to show welcome message after successful authentication
+- **2025-01-11**: Implemented proper PAM/IGA workflow with crm_read scope requests
+- **2025-01-11**: Added retry mechanism for post-approval token retrieval and CRM data access
+- **2025-01-11**: Created client credentials flow with act_as claims for Zero Trust delegation
+- **2025-01-11**: Separated elevated token retrieval from CRM data access for better security flow
+- **2025-01-11**: Added comprehensive audit logging for all PAM/IGA/CRM operations
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

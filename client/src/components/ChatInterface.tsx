@@ -135,37 +135,71 @@ export function ChatInterface({ sessionId, onTriggerAuth, isAuthenticated = fals
         }
         
       } else if (lowerInput.includes('retry') && pendingAccessRequest) {
-        // Retry after approval - get elevated token and CRM data
+        // Retry after approval - get client credentials and access token
+        const processingMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: `Access approved! Now requesting client credentials from PAM vault and obtaining access token with crm_read scope and act_as claim for ${pendingAccessRequest.targetUser}...`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, processingMessage]);
+        
         try {
-          const response = await fetch(`/api/workflow/${sessionId}/simulate-approval`, {
+          // Step 1: Get client credentials from PAM and obtain access token
+          const tokenResponse = await fetch(`/api/workflow/${sessionId}/get-elevated-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ requestId: pendingAccessRequest.id }),
+            body: JSON.stringify({ 
+              targetUser: pendingAccessRequest.targetUser,
+              requestedScope: 'crm_read'
+            }),
           });
           
-          if (response.ok) {
-            // Get CRM data
-            const crmResponse = await fetch(`/api/workflow/${sessionId}/get-crm-data`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            });
+          if (tokenResponse.ok) {
+            const tokenData = await tokenResponse.json();
             
-            if (crmResponse.ok) {
-              const crmData = await crmResponse.json();
-              setCrmData(crmData);
-              setActingAsUser(crmData.actingAs || pendingAccessRequest.targetUser);
-              
-              const botMessage: ChatMessage = {
-                id: (Date.now() + 1).toString(),
+            setTimeout(() => {
+              const tokenMessage: ChatMessage = {
+                id: (Date.now() + 2).toString(),
                 type: 'bot',
-                message: `Great! I'm now acting as ${crmData.actingAs || pendingAccessRequest.targetUser} and retrieved their CRM data from Salesforce:\\n\\n**Contact Information:**\\n- Name: ${crmData.contact?.firstName} ${crmData.contact?.lastName}\\n- Email: ${crmData.contact?.email}\\n- Company: ${crmData.contact?.company}\\n- Status: ${crmData.contact?.status}\\n\\nDo you need to update any of this information?`,
+                message: `✅ Successfully obtained access token with crm_read scope and act_as claim for ${tokenData.actingAs}. Now retrieving CRM data...`,
                 timestamp: new Date(),
               };
-              setMessages(prev => [...prev, botMessage]);
-            }
+              setMessages(prev => [...prev, tokenMessage]);
+            }, 1000);
+            
+            // Step 2: Get CRM data using the elevated token
+            setTimeout(async () => {
+              const crmResponse = await fetch(`/api/workflow/${sessionId}/get-crm-data`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetUser: pendingAccessRequest.targetUser }),
+              });
+              
+              if (crmResponse.ok) {
+                const crmData = await crmResponse.json();
+                setCrmData(crmData);
+                setActingAsUser(crmData.actingAs || pendingAccessRequest.targetUser);
+                
+                const botMessage: ChatMessage = {
+                  id: (Date.now() + 3).toString(),
+                  type: 'bot',
+                  message: `Perfect! I'm now acting as ${crmData.actingAs} and successfully retrieved their CRM data:\n\n**Contact Information:**\n- Name: ${crmData.contact?.firstName} ${crmData.contact?.lastName}\n- Email: ${crmData.contact?.email}\n- Company: ${crmData.contact?.company}\n- Status: ${crmData.contact?.status}\n\nDo you need to update any of this information?`,
+                  timestamp: new Date(),
+                };
+                setMessages(prev => [...prev, botMessage]);
+              }
+            }, 2000);
           }
         } catch (error) {
           console.error('Retry failed:', error);
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 4).toString(),
+            type: 'bot',
+            message: 'Sorry, I encountered an error while obtaining the elevated token. Please try again.',
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, errorMessage]);
         }
         
       } else if (crmData && (lowerInput.includes('update') || lowerInput.includes('modify') || lowerInput.includes('change'))) {

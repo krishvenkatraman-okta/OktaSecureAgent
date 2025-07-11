@@ -361,7 +361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Request elevated access (PAM + IGA)
+  // Request PAM secret retrieval (which auto-triggers IGA)
   app.post('/api/workflow/:sessionId/request-access', async (req, res) => {
     try {
       const { sessionId } = req.params;
@@ -372,95 +372,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Session not found' });
       }
 
-      console.log(`Starting PAM/IGA request flow for ${targetUser} with ${requestedScope} scope`);
+      console.log(`Starting PAM secret retrieval for ${targetUser} - this will auto-trigger IGA approval`);
 
       // Update workflow to step 3 (PAM Secret Retrieval)
       await storage.updateWorkflowSession(sessionId, { currentStep: 3 });
 
-      // Step 1: PAM request for client credentials secret
-      console.log('Step 1: Requesting client credentials from PAM vault...');
+      // PAM request for client credentials secret - this should auto-trigger IGA
+      console.log('Making PAM reveal request which will automatically trigger IGA approval workflow...');
       try {
         const pamSecret = await pamService.retrieveSecret();
-        console.log('Client credentials retrieved from PAM vault');
+        console.log('PAM secret reveal request completed - IGA workflow should now be triggered automatically by Okta');
       } catch (error) {
-        console.warn('PAM secret retrieval failed, using environment fallback:', error);
+        console.warn('PAM secret retrieval failed:', error);
+        return res.status(500).json({ error: 'PAM secret retrieval failed' });
       }
       
-      // Update to step 4 after completing PAM retrieval
+      // Update to step 4 for IGA approval (auto-triggered by PAM)
       await storage.updateWorkflowSession(sessionId, { currentStep: 4 });
       
-      // Step 2: Create IGA access request for crm_read scope  
-      console.log('Step 2: Creating IGA access request for crm_read scope...');
-      
-      // Step 3: Get user profile with okta.users.read scope (after getting client creds)
-      console.log('Step 3: Fetching user profile with okta.users.read scope...');
-      try {
-        const clientToken = await oktaService.getClientCredentialsToken(['okta.users.read']);
-        const userProfile = await oktaService.getUserProfile(targetUser.split('@')[0]);
-        console.log('User profile fetched successfully');
-      } catch (error) {
-        console.warn('User profile fetch failed, continuing with mock data:', error);
-      }
-      const igaRequest = await igaService.createAccessRequest({
-        targetUser,
-        requestedScope: requestedScope || 'crm_read',
-        justification: justification || `AI agent needs ${requestedScope} scope to access CRM data`,
-      });
-
-      // Store access request
+      // Store local access request for UI tracking (IGA request created automatically by Okta)
       const accessRequest = await storage.createAccessRequest({
         sessionId,
-        requestType: 'iga',
+        requestType: 'pam_auto_iga',
         targetUser,
-        requestedScope,
+        requestedScope: requestedScope || 'crm_read',
         status: 'pending',
         approverName: 'Sarah Chen',
-        justification,
+        justification: justification || `AI agent PAM secret reveal auto-triggered IGA approval for ${targetUser}`,
       });
 
-      // Keep at step 4 for IGA approval
-      await storage.updateWorkflowSession(sessionId, {
-        currentStep: 4,
-        metadata: { ...session.metadata, igaRequestId: igaRequest.id },
-      });
-
-      // Create notification
+      // Create notification for UI
       await storage.createNotification({
         sessionId,
         type: 'push',
         recipient: 'sarah.chen@acme.com',
-        message: `AcmeAI is requesting access to ${targetUser}'s CRM data. Approve?`,
+        message: `PAM secret reveal automatically triggered IGA approval request for ${targetUser}'s CRM data access`,
         status: 'sent',
       });
 
-      // Send Okta Verify push notification
-      try {
-        await oktaService.sendVerifyPush(
-          'sarah.chen@acme.com',
-          `Approve AI agent access to ${targetUser}'s CRM data?`
-        );
-      } catch (pushError) {
-        console.warn('Failed to send Okta Verify push:', pushError);
-      }
-
       await storage.createAuditLog({
         sessionId,
-        eventType: 'access_request',
-        eventData: { targetUser, requestedScope, justification },
+        eventType: 'pam_secret_reveal',
+        eventData: { targetUser, requestedScope, auto_iga_trigger: true },
         userId: session.userId,
       });
 
       // Send real-time update
       sendRealtimeUpdate(sessionId, {
-        type: 'access_request_submitted',
+        type: 'pam_request_submitted',
         step: 4,
         accessRequest,
+        message: 'PAM secret reveal completed - IGA approval automatically triggered'
       });
 
-      res.json({ success: true, accessRequest, igaRequest });
+      res.json({ 
+        success: true, 
+        accessRequest,
+        message: 'PAM secret reveal completed - IGA approval workflow automatically triggered by Okta'
+      });
     } catch (error) {
-      console.error('Error requesting access:', error);
-      res.status(500).json({ error: 'Failed to request access' });
+      console.error('Error with PAM request:', error);
+      res.status(500).json({ error: 'Failed to complete PAM request' });
     }
   });
 

@@ -87,13 +87,13 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         }, 500);
         
       } else if (isAuthenticated && lowerInput.includes('@')) {
-        // User provided email - request PAM/IGA access for crm_read scope
+        // User provided email - request PAM secret retrieval which will auto-trigger IGA
         const email = currentInput.match(/[\w.-]+@[\w.-]+\.\w+/)?.[0] || currentInput;
         
         const botMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
-          message: `I need elevated permissions to access CRM data for ${email}. Let me request access through PAM and submit an IGA approval request for the crm_read scope...`,
+          message: `I need to retrieve client credentials from PAM vault to access CRM data for ${email}. Making PAM reveal request which will automatically trigger IGA approval workflow...`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, botMessage]);
@@ -105,7 +105,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             const approvalMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),
               type: 'bot',
-              message: `✅ PAM request submitted for retrieving client credentials and IGA approval request created for crm_read scope targeting ${email}. The request is now pending approval. You can simulate approval using the controls on the right.`,
+              message: `✅ PAM secret reveal request submitted. This automatically created an IGA approval request through Okta's system. The request is now pending approval. You can simulate approval using the controls on the right.`,
               timestamp: new Date(),
               action: 'pending_approval'
             };

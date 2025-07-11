@@ -80,10 +80,10 @@ export function ChatInterface({ sessionId, onTriggerAuth, isAuthenticated = fals
         
         setMessages(prev => [...prev, botMessage]);
         
-        // Trigger Okta authentication
+        // Trigger Okta authentication immediately
         setTimeout(() => {
           onTriggerAuth();
-        }, 1500);
+        }, 500);
         
       } else if (isAuthenticated && lowerInput.includes('@')) {
         // User provided email - request PAM/IGA access

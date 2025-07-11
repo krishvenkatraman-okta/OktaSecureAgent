@@ -89,6 +89,8 @@ export default function Dashboard() {
   // Trigger Okta authentication when requested by chatbot
   const triggerAuthentication = async () => {
     try {
+      console.log('Triggering authentication...');
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,16 +98,25 @@ export default function Dashboard() {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Auth URL received:', data.authUrl);
+        
+        toast({
+          title: 'Redirecting to Okta',
+          description: 'Opening Okta authentication...',
+        });
+        
         // Redirect to Okta for authentication
         window.location.href = data.authUrl;
       } else {
-        throw new Error('Failed to get auth URL');
+        const errorData = await response.text();
+        console.error('Auth response error:', errorData);
+        throw new Error(`Failed to get auth URL: ${response.status}`);
       }
     } catch (error) {
       console.error('Authentication trigger failed:', error);
       toast({
         title: 'Authentication Failed',
-        description: 'Could not start Okta authentication. Please try again.',
+        description: `Could not start Okta authentication: ${error.message}`,
         variant: 'destructive',
       });
     }

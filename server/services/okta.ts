@@ -114,6 +114,10 @@ export class OktaService {
 
   getOIDCConfig() {
     return {
+      issuer: 'https://fcxdemo.okta.com/oauth2/default',
+      authorizationEndpoint: 'https://fcxdemo.okta.com/oauth2/default/v1/authorize',
+      tokenEndpoint: 'https://fcxdemo.okta.com/oauth2/default/v1/token',
+      jwksUri: 'https://fcxdemo.okta.com/oauth2/default/v1/keys',
       domain: this.config.domain,
       clientId: this.config.spaClientId,
       redirectUri: `${process.env.REPLIT_DOMAINS?.split(',')[0] || 'http://localhost:5000'}/callback`,

@@ -29,7 +29,7 @@ export class PAMService {
         `https://fcxdemo.pam.okta.com/v1/teams/fcxdemo/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}`,
         {
           headers: {
-            'Authorization': `ApiKey ${this.config.apiKeyId}:${this.config.apiKeySecret}`,
+            'Authorization': `Bearer ${this.config.apiKeySecret}`,
             'Content-Type': 'application/json',
           },
         }

@@ -25,28 +25,20 @@ export class PAMService {
 
   async retrieveSecret(): Promise<string> {
     try {
-      // If we have proper PAM credentials, try to fetch from vault
-      if (process.env.PAM_API_KEY_ID && process.env.PAM_API_KEY_SECRET) {
-        const response = await axios.get(
-          `https://${this.config.domain}/secrets/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${this.config.apiKeySecret}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
+      const response = await axios.get(
+        `https://${this.config.domain}/secrets/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.config.apiKeySecret}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-        return response.data.secret;
-      } else {
-        // Demo mode: Use fallback client secret for demonstration
-        console.log('PAM demo mode: Using fallback client secret for demonstration');
-        return process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET || 'w-duI3IyYtEqlNKsmlR2LaRICXVUUr61sMzYHbeQ2q5_3qeoTTtSETIvzjPPLA9O';
-      }
+      return response.data.secret;
     } catch (error) {
-      console.error('Error retrieving PAM secret, falling back to demo mode:', error);
-      // Fallback to environment variable for demo purposes
-      return process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET || 'w-duI3IyYtEqlNKsmlR2LaRICXVUUr61sMzYHbeQ2q5_3qeoTTtSETIvzjPPLA9O';
+      console.error('Error retrieving PAM secret:', error);
+      throw new Error('Failed to retrieve PAM secret');
     }
   }
 

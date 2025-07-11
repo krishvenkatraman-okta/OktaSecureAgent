@@ -125,5 +125,8 @@ Required environment variables for production deployment:
 - **2025-01-11**: Simplified workflow to only make PAM requests - IGA approval auto-triggered by Okta PAM system
 - **2025-01-11**: Removed manual IGA service calls as PAM reveal automatically triggers IGA workflow
 - **2025-01-11**: Added comprehensive audit logging for all PAM/IGA/CRM operations
+- **2025-01-11**: Fixed PAM API request format - changed publicKey to public_key per Okta API specification
+- **2025-01-11**: Updated JWK public key format to match Okta documentation (removed key_ops field)
+- **2025-01-11**: Added detailed debug logging for complete PAM API call tracing
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

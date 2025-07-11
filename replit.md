@@ -97,6 +97,7 @@ Required environment variables for production deployment:
 - `OKTA_CLIENT_CREDENTIALS_CLIENT_ID`: Service client ID
 - `OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET`: Service client secret
 - `OKTA_API_TOKEN`: API token for user management
+- `PAM_TEAM_NAME`: PAM team name (defaults to 'fcxdemo')
 - `PAM_API_KEY_ID`: Privileged Access Management key ID
 - `PAM_API_KEY_SECRET`: PAM secret key
 - `PAM_RESOURCE_GROUP_ID`: PAM resource group identifier

@@ -17,7 +17,7 @@ export class PAMService {
   constructor() {
     this.config = {
       domain: 'fcxdemo.pam.okta.com',
-      teamName: 'fcxdemo',
+      teamName: process.env.PAM_TEAM_NAME || 'fcxdemo',
       apiKeyId: process.env.PAM_API_KEY_ID || '',
       apiKeySecret: process.env.PAM_API_KEY_SECRET || '',
       resourceGroupId: process.env.PAM_RESOURCE_GROUP_ID || '',

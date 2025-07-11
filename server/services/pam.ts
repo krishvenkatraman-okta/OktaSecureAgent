@@ -92,7 +92,7 @@ export class PAMService {
       // Step 3: Make PAM reveal request with public key (this should auto-trigger IGA approval)
       console.log('Making PAM reveal request with public key - this should auto-trigger IGA approval workflow...');
       const revealResponse = await axios.post(
-        `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}/reveal`,
+        `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secret/${this.config.secretId}/reveal`,
         {
           publicKey: publicKeyJWK
         },

@@ -55,6 +55,7 @@ export const notifications = pgTable("notifications", {
   recipient: text("recipient").notNull(),
   message: text("message").notNull(),
   status: text("status").notNull().default("sent"), // sent, delivered, failed
+  metadata: text("metadata"), // JSON field for storing additional data like poll URLs
   createdAt: timestamp("created_at").defaultNow(),
 });
 

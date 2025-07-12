@@ -29,6 +29,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   const [crmData, setCrmData] = useState<any>(null);
   const [actingAsUser, setActingAsUser] = useState<string>('');
   const [pendingAccessRequest, setPendingAccessRequest] = useState<any>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Initialize welcome message and auto-check app access after authentication
   useEffect(() => {
@@ -102,6 +103,154 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       }]);
     }
   }, [isAuthenticated, currentStep, sessionId]);
+
+  // Cleanup polling on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
+
+  const pollPushNotification = async (pollUrl: string, targetUser: string) => {
+    let attempts = 0;
+    const maxAttempts = 20; // Poll for up to 2 minutes (every 6 seconds)
+    
+    const poll = async () => {
+      try {
+        attempts++;
+        console.log(`Polling attempt ${attempts}/${maxAttempts}:`, pollUrl);
+        
+        const response = await fetch(`/api/workflow/${sessionId}/poll-push`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pollUrl }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Poll response:', data);
+          
+          if (data.status === 'SUCCESS') {
+            // Push was approved
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              setPollingInterval(null);
+            }
+            
+            const approvedMessage: ChatMessage = {
+              id: nanoid(),
+              type: 'bot',
+              message: `✅ ${targetUser} approved your request! Now getting PAM credentials and accessing CRM data...`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, approvedMessage]);
+            
+            // Continue with PAM and CRM access
+            handlePamAndCrmAccess(targetUser);
+            
+          } else if (data.status === 'REJECTED') {
+            // Push was denied
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              setPollingInterval(null);
+            }
+            
+            const deniedMessage: ChatMessage = {
+              id: nanoid(),
+              type: 'bot',
+              message: `❌ ${targetUser} denied your access request. You cannot access their CRM data.`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, deniedMessage]);
+            
+          } else if (attempts >= maxAttempts) {
+            // Timeout
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              setPollingInterval(null);
+            }
+            
+            const timeoutMessage: ChatMessage = {
+              id: nanoid(),
+              type: 'bot',
+              message: `⏰ Push notification timed out. ${targetUser} did not respond within the time limit.`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, timeoutMessage]);
+          }
+        }
+      } catch (error) {
+        console.error('Error polling push notification:', error);
+        if (attempts >= maxAttempts && pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+        }
+      }
+    };
+    
+    // Start polling every 6 seconds
+    const interval = setInterval(poll, 6000);
+    setPollingInterval(interval);
+    
+    // Initial poll
+    poll();
+  };
+
+  const handlePamAndCrmAccess = async (targetUser: string) => {
+    try {
+      // Step 1: Get PAM credentials with act_as claims
+      const pamResponse = await fetch(`/api/workflow/${sessionId}/get-elevated-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          targetUser,
+          requestedScope: 'crm_read'
+        }),
+      });
+      
+      if (pamResponse.ok) {
+        const pamData = await pamResponse.json();
+        
+        // Step 2: Access CRM data using the elevated token
+        const crmResponse = await fetch(`/api/workflow/${sessionId}/access-crm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            targetUser,
+            accessToken: pamData.accessToken
+          }),
+        });
+        
+        if (crmResponse.ok) {
+          const crmData = await crmResponse.json();
+          setCrmData(crmData);
+          
+          const successMessage: ChatMessage = {
+            id: nanoid(),
+            type: 'bot',
+            message: `🎉 Success! Retrieved CRM data for ${targetUser}:\n\n📋 **Contact Information:**\n• Name: ${crmData.firstName} ${crmData.lastName}\n• Email: ${crmData.email}\n• Company: ${crmData.company}\n• Phone: ${crmData.phone || 'Not provided'}\n• Status: ${crmData.status}\n• Owner: ${crmData.owner}`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, successMessage]);
+        } else {
+          throw new Error('Failed to access CRM data');
+        }
+      } else {
+        throw new Error('Failed to get PAM credentials');
+      }
+    } catch (error) {
+      console.error('Error in PAM/CRM flow:', error);
+      const errorMessage: ChatMessage = {
+        id: nanoid(),
+        type: 'bot',
+        message: `❌ Error accessing CRM data: ${error.message}`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
 
   const checkAppAccess = async () => {
     if (hasGroupAccess) return; // Don't check again if already have access
@@ -390,15 +539,21 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           });
           
           if (response.ok) {
+            const data = await response.json();
             const pushMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),
               type: 'bot',
-              message: `📱 Push notification sent to ${targetUser}! Waiting for approval...\n\nFor demo purposes, you can simulate the approval using the button below.`,
+              message: `📱 Push notification sent to ${targetUser}! Polling for response...\n\nTransaction ID: ${data.transactionId}`,
               timestamp: new Date(),
               action: 'pending_push_approval'
             };
             setMessages(prev => [...prev, pushMessage]);
             setActingAsUser(targetUser);
+            
+            // Start polling if poll URL is available
+            if (data.pollUrl) {
+              pollPushNotification(data.pollUrl, targetUser);
+            }
           } else {
             const errorMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),

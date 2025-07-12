@@ -943,14 +943,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send push notification using Okta Factors API with correct URL format
       const pushResult = await oktaService.sendVerifyPush(oktaUserId, 'AI Agent requesting write access to CRM data', factorId);
       
+      // Store the poll URL for transaction tracking
+      await storage.createNotification({
+        sessionId,
+        type: 'push_sent',
+        recipient: 'brandon.stark',
+        message: 'Push notification sent to Brandon Stark',
+        metadata: JSON.stringify({
+          pollUrl: pushResult._links?.poll?.href || pushResult.poll?.href,
+          transactionId: pushResult.transactionId,
+          factorResult: pushResult.factorResult,
+          userId: oktaUserId,
+          factorId
+        })
+      });
+      
       res.json({ 
         success: true, 
         message: 'Push notification sent successfully',
-        pushResult
+        pushResult,
+        pollUrl: pushResult._links?.poll?.href || pushResult.poll?.href,
+        transactionId: pushResult.transactionId
       });
     } catch (error) {
       console.error('Error sending push notification:', error);
       res.status(500).json({ error: 'Failed to send push notification' });
+    }
+  });
+
+  // Poll push notification status endpoint
+  app.post('/api/workflow/:sessionId/poll-push', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { pollUrl } = req.body;
+      
+      if (!pollUrl) {
+        return res.status(400).json({ error: 'Poll URL is required' });
+      }
+      
+      console.log(`Polling push transaction for session ${sessionId}: ${pollUrl}`);
+      
+      // Poll the transaction status
+      const pollResult = await oktaService.pollPushTransaction(pollUrl);
+      
+      console.log('Poll result:', pollResult);
+      
+      // Create notification with poll result
+      await storage.createNotification({
+        sessionId,
+        type: 'push_poll_result',
+        recipient: 'brandon.stark',
+        message: `Push notification status: ${pollResult.factorResult}`,
+        metadata: JSON.stringify({
+          factorResult: pollResult.factorResult,
+          pollResult
+        })
+      });
+      
+      // Send real-time update to client
+      sendRealtimeUpdate(sessionId, {
+        type: 'push_poll_update',
+        data: {
+          status: pollResult.factorResult,
+          pollResult
+        }
+      });
+      
+      res.json({
+        success: true,
+        pollResult,
+        status: pollResult.factorResult,
+        isApproved: pollResult.factorResult === 'SUCCESS'
+      });
+    } catch (error) {
+      console.error('Error polling push notification:', error);
+      res.status(500).json({ error: 'Failed to poll push notification' });
     }
   });
 

@@ -103,7 +103,25 @@ export class OktaService {
       
       const response = await axios.post(
         url,
-        { message },
+        {
+          factorResult: 'WAITING',
+          expiresAt: '2025-07-12T06:21:60.627Z', // 5 minutes from now
+          profile: {
+            credentialId: 'brandon.stark@acme.com',
+            deviceType: 'SmartPhone_IPhone',
+            keys: [
+              {
+                kty: 'EC',
+                use: 'sig',
+                kid: 'default',
+                jwkType: 'proofOfPossession',
+                x: 'PhIlcreQ6gEgMJJOstoPyACmeItALOKIzoHdPQ',
+                y: '2iDUt1jEHvy_G1DSt4tuFFaVJM_G06AqtXtVAHJTEsw',
+                crv: 'P-256',
+              },
+            ],
+          },
+        },
         {
           headers: {
             'Authorization': `SSWS ${this.config.apiToken}`,
@@ -121,6 +139,27 @@ export class OktaService {
         console.error('Response data:', error.response.data);
       }
       throw new Error('Failed to send Okta Verify push notification');
+    }
+  }
+
+  async pollPushTransaction(pollUrl: string): Promise<any> {
+    try {
+      const response = await axios.get(pollUrl, {
+        headers: {
+          'Authorization': `SSWS ${this.config.apiToken}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      console.log('Push poll response:', response.status, response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error polling Okta push transaction:', error);
+      if (error.response) {
+        console.error('Poll response status:', error.response.status);
+        console.error('Poll response data:', error.response.data);
+      }
+      throw new Error('Failed to poll Okta push transaction');
     }
   }
 

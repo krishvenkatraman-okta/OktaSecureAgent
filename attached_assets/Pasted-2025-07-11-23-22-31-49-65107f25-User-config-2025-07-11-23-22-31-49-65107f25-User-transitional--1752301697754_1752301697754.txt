@@ -1,0 +1,131 @@
+2025-07-11 23:22:31.49
+65107f25
+User
+config: {
+2025-07-11 23:22:31.49
+65107f25
+User
+transitional: {
+2025-07-11 23:22:31.49
+65107f25
+User
+silentJSONParsing: true,
+2025-07-11 23:22:31.49
+65107f25
+User
+forcedJSONParsing: true,
+2025-07-11 23:22:31.49
+65107f25
+User
+clarifyTimeoutError: false
+2025-07-11 23:22:31.49
+65107f25
+User
+},
+2025-07-11 23:22:31.49
+65107f25
+User
+adapter: [ 'xhr', 'http', 'fetch' ],
+2025-07-11 23:22:31.49
+65107f25
+User
+transformRequest: [ [Function: transformRequest] ],
+2025-07-11 23:22:31.49
+65107f25
+User
+transformResponse: [ [Function: transformResponse] ],
+2025-07-11 23:22:31.49
+65107f25
+User
+timeout: 0,
+2025-07-11 23:22:31.49
+65107f25
+User
+xsrfCookieName: 'XSRF-TOKEN',
+2025-07-11 23:22:31.49
+65107f25
+User
+xsrfHeaderName: 'X-XSRF-TOKEN',
+2025-07-11 23:22:31.49
+65107f25
+User
+maxContentLength: -1,
+2025-07-11 23:22:31.49
+65107f25
+User
+maxBodyLength: -1,
+2025-07-11 23:22:31.49
+65107f25
+User
+env: { FormData: [Function [FormData]], Blob: [class Blob] },
+2025-07-11 23:22:31.49
+65107f25
+User
+validateStatus: [Function: validateStatus],
+2025-07-11 23:22:31.49
+65107f25
+User
+headers: Object [AxiosHeaders] {
+2025-07-11 23:22:31.49
+65107f25
+User
+Accept: 'application/json, text/plain, */*',
+2025-07-11 23:22:31.49
+65107f25
+User
+'Content-Type': 'application/json',
+2025-07-11 23:22:31.49
+65107f25
+User
+Authorization: 'SSWS 00Qb8QieXMZXgN3lyFXprLFsOJAAIuBpXamwTOOCcU',
+2025-07-11 23:22:31.49
+65107f25
+User
+'User-Agent': 'axios/1.10.0',
+2025-07-11 23:22:31.49
+65107f25
+User
+'Content-Length': '58',
+2025-07-11 23:22:31.49
+65107f25
+User
+'Accept-Encoding': 'gzip, compress, deflate, br'
+2025-07-11 23:22:31.49
+65107f25
+User
+},
+2025-07-11 23:22:31.49
+65107f25
+User
+method: 'post',
+2025-07-11 23:22:31.49
+65107f25
+User
+url: 'https://fcxdemo.okta.com/api/v1/users/00usgiat1bZOUk7Pq697/factors/opft473jgukmcdFGI697/verify',
+2025-07-11 23:22:31.49
+65107f25
+User
+data: '{"message":"AI Agent requesting write access to CRM data"}',
+2025-07-11 23:22:31.49
+65107f25
+User
+allowAbsoluteUrls: true
+2025-07-11 23:22:31.49
+65107f25
+User
+},
+2025-07-11 23:22:31.49
+65107f25
+User
+request: ClientRequest {
+2025-07-11 23:22:31.49
+65107f25
+User
+_events: [Object: null prototype] {
+2025-07-11 23:22:31.49
+65107f25
+User
+abort: [Function (anonymous)],
+2025-07-11 23:22:31.49
+65107f25
+User

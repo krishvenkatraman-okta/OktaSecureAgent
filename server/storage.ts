@@ -166,6 +166,7 @@ export class MemStorage implements IStorage {
       ...notification,
       id: this.notificationId++,
       status: notification.status || 'sent',
+      metadata: notification.metadata || null,
       createdAt: new Date(),
     };
     this.notifications.set(newNotification.id, newNotification);

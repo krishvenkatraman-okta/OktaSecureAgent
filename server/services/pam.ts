@@ -28,33 +28,33 @@ export class PAMService {
 
   private async getServiceBearerToken(): Promise<string> {
     try {
-      // Use OAuth 2.0 client credentials flow to get bearer token from PAM
-      const tokenUrl = `https://${this.config.domain}/oauth/token`;
-      const tokenBody = new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: this.config.apiKeyId,
-        client_secret: this.config.apiKeySecret,
-        scope: 'secrets:read'
-      });
+      // Use PAM service token endpoint to get bearer token
+      const tokenUrl = `https://${this.config.domain}/v1/teams/${this.config.teamName}/service_token`;
+      const tokenBody = {
+        key_id: this.config.apiKeyId,
+        key_secret: this.config.apiKeySecret
+      };
       
-      console.log('Getting PAM bearer token using client credentials flow...');
+      console.log('Getting PAM service token...');
       console.log('Token URL:', tokenUrl);
+      console.log('Key ID:', this.config.apiKeyId);
       
       const response = await axios.post(tokenUrl, tokenBody, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
 
-      const bearerToken = response.data.access_token;
-      console.log('PAM bearer token obtained successfully');
+      const bearerToken = response.data.bearer_token;
+      console.log('PAM service token obtained successfully');
       console.log('Token preview:', bearerToken ? `${bearerToken.substring(0, 20)}...` : 'null');
       return bearerToken;
     } catch (error) {
-      console.error('Error getting PAM bearer token:', error);
+      console.error('Error getting PAM service token:', error);
       console.error('Response status:', error.response?.status);
       console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
-      throw new Error('Failed to obtain PAM bearer token');
+      throw new Error('Failed to obtain PAM service token');
     }
   }
 
@@ -114,7 +114,7 @@ export class PAMService {
       
       console.log('All PAM credentials configured - proceeding with real PAM API calls');
       
-      // Step 1: Get bearer token using client credentials OAuth flow
+      // Step 1: Get bearer token using PAM service token endpoint
       const bearerToken = await this.getServiceBearerToken();
       
       // Step 2: Generate RSA key pair for encryption

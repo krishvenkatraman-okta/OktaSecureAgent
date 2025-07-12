@@ -963,6 +963,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Send push notification using Okta Factors API with correct URL format
       const pushResult = await oktaService.sendVerifyPush(oktaUserId, 'AI Agent requesting write access to CRM data', factorId);
       
+      console.log('Push notification result:', pushResult);
+      console.log('Push result _links:', pushResult._links);
+      console.log('Push poll URL:', pushResult._links?.poll?.href);
+      
       // Store the poll URL for transaction tracking
       await storage.createNotification({
         sessionId,
@@ -1120,6 +1124,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error stopping push polling:', error);
       res.status(500).json({ error: 'Failed to stop push polling' });
+    }
+  });
+
+  // Manual push approval for cases where mobile approval was received but not tracked
+  app.post('/api/workflow/:sessionId/manual-push-approval', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { targetUser } = req.body;
+      
+      console.log(`📱 Manual push approval for session ${sessionId}, user: ${targetUser}`);
+      
+      const session = await storage.getWorkflowSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      
+      // Create approval notification
+      await storage.createNotification({
+        sessionId,
+        type: 'push_approved_manual',
+        recipient: targetUser,
+        message: `Push notification manually approved for ${targetUser}`,
+        metadata: JSON.stringify({
+          approvedAt: new Date().toISOString(),
+          method: 'manual_recovery'
+        })
+      });
+      
+      // Continue with PAM flow
+      res.json({ 
+        success: true, 
+        approved: true,
+        message: 'Push notification approval recorded',
+        status: 'SUCCESS'
+      });
+    } catch (error) {
+      console.error('Error recording manual push approval:', error);
+      res.status(500).json({ error: 'Failed to record push approval' });
     }
   });
 

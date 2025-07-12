@@ -112,8 +112,8 @@ export class PAMService {
       };
 
       // Step 3: Make PAM reveal request with public key (this should auto-trigger IGA approval)
-      // Note: Using 'secrets' (plural) instead of 'secret' based on Postman working URL
-      const pamApiUrl = `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}/reveal`;
+      // Note: URL structure matches Postman - no '/reveal' suffix needed
+      const pamApiUrl = `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}`;
       const requestBody = { public_key: publicKeyJWK };
       const requestHeaders = {
         'Authorization': `Bearer ${bearerToken}`,

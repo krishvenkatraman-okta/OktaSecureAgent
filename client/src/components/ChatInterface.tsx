@@ -30,7 +30,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   const [actingAsUser, setActingAsUser] = useState<string>('');
   const [pendingAccessRequest, setPendingAccessRequest] = useState<any>(null);
 
-  // Initialize welcome message
+  // Initialize welcome message and auto-check app access after authentication
   useEffect(() => {
     if (isAuthenticated) {
       // Extract name from ID token for personalized welcome
@@ -59,9 +59,14 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           setMessages([{
             id: '1',
             type: 'bot',
-            message: `Welcome ${userName}! You've been successfully authenticated via Okta OIDC. I can help you access CRM data securely. Just ask me to "get CRM data" and I'll check your app permissions.`,
+            message: `Welcome ${userName}! You've been successfully authenticated via Okta OIDC. I'll now automatically check your CRM app access...`,
             timestamp: new Date(),
           }]);
+          
+          // Automatically check app access after authentication
+          setTimeout(() => {
+            checkAppAccess();
+          }, 2000);
         });
     } else {
       setMessages([{
@@ -72,6 +77,115 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       }]);
     }
   }, [isAuthenticated, currentStep, sessionId]);
+
+  const checkAppAccess = async () => {
+    if (hasGroupAccess) return; // Don't check again if already have access
+    
+    const checkingMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'bot',
+      message: 'Checking your Okta app membership for CRM access...',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, checkingMessage]);
+    
+    try {
+      const response = await fetch(`/api/workflow/${sessionId}/check-app-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.hasAccess) {
+          setHasGroupAccess(true);
+          const successMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'bot',
+            message: `✅ Great! You have CRM app access. Please specify which user's data you need (e.g., "brandon.stark@acme.com").`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, successMessage]);
+        } else {
+          // No access - trigger IGA request automatically
+          const deniedMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            type: 'bot',
+            message: `❌ You don't have CRM app access. Submitting an Identity Governance (IGA) request for access approval...`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, deniedMessage]);
+          
+          // Submit IGA request automatically
+          setTimeout(() => {
+            submitIGARequest();
+          }, 1000);
+        }
+      } else {
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: `❌ Failed to check app access. Please try saying "get CRM data" to retry.`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('App access check error:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        message: `❌ Error checking app access. Please try saying "get CRM data" to retry.`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const submitIGARequest = async () => {
+    try {
+      const igaResponse = await fetch(`/api/workflow/${sessionId}/submit-iga-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestTypeId: '6871edc88d85367555d34e8a',
+          subject: 'CRM Application Access Request'
+        }),
+      });
+      
+      if (igaResponse.ok) {
+        const igaData = await igaResponse.json();
+        const pendingMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: `📋 IGA access request submitted successfully! Request ID: ${igaData.requestId}\n\nWaiting for manager approval... This would normally take some time, but for the demo you can click the button below to simulate approval.`,
+          timestamp: new Date(),
+          action: 'pending_iga_approval'
+        };
+        setMessages(prev => [...prev, pendingMessage]);
+        setPendingAccessRequest(igaData);
+      } else {
+        const errorData = await igaResponse.json();
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: `❌ Failed to submit IGA request: ${errorData.error}`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('IGA request error:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        message: `❌ Error submitting IGA request. Please try again.`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;

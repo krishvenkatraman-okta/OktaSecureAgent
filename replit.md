@@ -128,6 +128,9 @@ Required environment variables for production deployment:
 - **2025-01-12**: Added comprehensive state management for IGA workflow with proper step progression
 - **2025-01-12**: Implemented push notification flow for user-specific data access approval
 - **2025-01-12**: Updated chat interface to handle new workflow states: app access check, IGA submission, approval waiting, and CRM data retrieval
+- **2025-01-12**: CRITICAL FIX: Added automatic workflow progression after authentication - no longer silent after login
+- **2025-01-12**: CRITICAL FIX: Fixed push notification URL construction to properly include https:// prefix
+- **2025-01-12**: Enhanced UX: Chatbot now automatically checks app access and submits IGA request after OIDC authentication
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
 - **2025-01-11**: Implemented proper PAM secret retrieval with public key parameter in request body per API documentation

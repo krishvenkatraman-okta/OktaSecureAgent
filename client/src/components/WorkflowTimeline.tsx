@@ -9,6 +9,8 @@ interface WorkflowTimelineProps {
 }
 
 export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTimelineProps) {
+  // Debug logging to trace the issue
+  console.log('WorkflowTimeline render - currentStep:', currentStep, 'sessionId:', sessionId);
   const steps = [
     {
       id: 1,

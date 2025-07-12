@@ -16,6 +16,10 @@ export function useWorkflowState(sessionId: string) {
   const workflowQuery = useQuery({
     queryKey: ['/api/workflow', sessionId],
     enabled: !!sessionId,
+    refetchInterval: 2000, // Poll every 2 seconds for faster updates
+    refetchIntervalInBackground: true,
+    staleTime: 0, // Always consider data stale for immediate updates
+    gcTime: 0, // Don't cache stale data
   });
 
   const initWorkflowMutation = useMutation({

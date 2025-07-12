@@ -71,12 +71,15 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             console.log('Step 2 completed: User profile extracted', data);
             console.log('Backend returned currentStep:', data.currentStep);
             
-            // Force immediate refresh to show timeline update
+            // Force immediate page refresh to show timeline update
             window.location.reload();
           }).catch(err => {
             console.error('Failed to complete step 2:', err);
             // Still reload to try to get the updated state
-            setTimeout(() => window.location.reload(), 2000);
+            setTimeout(() => {
+              console.log('Reloading page after error...');
+              window.location.reload();
+            }, 500);
           });
           
           setMessages([{

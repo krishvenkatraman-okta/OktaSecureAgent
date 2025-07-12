@@ -449,6 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       console.log('Updated session step to 3:', updatedSession?.currentStep);
+      console.log('Session update result:', updatedSession ? 'SUCCESS' : 'FAILED');
       
       await storage.createAuditLog({
         sessionId,

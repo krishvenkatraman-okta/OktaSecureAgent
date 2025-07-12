@@ -64,13 +64,8 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             body: JSON.stringify({ userName })
           }).then(response => response.json()).then(data => {
             console.log('Step 2 completed: User profile extracted', data);
-            // Force update currentStep state to trigger timeline refresh
-            if (data.currentStep && data.currentStep > currentStep) {
-              // Use the hook's refetch method instead of page reload
-              setTimeout(() => {
-                window.location.reload();
-              }, 1000);
-            }
+            // Force timeline refresh immediately to show step 2 as completed
+            window.location.reload();
           }).catch(err => {
             console.error('Failed to complete step 2:', err);
           });

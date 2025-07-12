@@ -128,6 +128,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   }, [pollingInterval]);
 
   const pollPushNotification = async (pollUrl: string, targetUser: string) => {
+    console.log('🔄 STARTING PUSH NOTIFICATION POLLING for:', targetUser);
     let attempts = 0;
     const maxAttempts = 20; // Poll for up to 2 minutes (every 6 seconds)
     
@@ -149,7 +150,16 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           if (data.status === 'SUCCESS' || data.isApproved === true) {
             // CRITICAL: Stop all polling immediately
             console.log('SUCCESS detected - stopping all polling NOW');
-            clearInterval(interval);
+            
+            // Clear BOTH intervals - the local one and the state one
+            if (interval) {
+              clearInterval(interval);
+              console.log('Local interval cleared');
+            }
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+              console.log('State interval cleared');
+            }
             setPollingInterval(null);
             
             const approvedMessage: ChatMessage = {
@@ -216,14 +226,34 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
     };
     
     // Start polling every 6 seconds
+    console.log('🔄 Setting up push polling interval for:', targetUser);
     const interval = setInterval(async () => {
       const result = await poll();
       if (result === true) {
+        // SUCCESS detected, immediately clear BOTH intervals
+        console.log('Outer polling detected success - clearing both intervals');
         clearInterval(interval);
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
         setPollingInterval(null);
+        return; // Exit immediately
       }
     }, 6000);
+    
     setPollingInterval(interval);
+    
+    // Safety timeout to stop polling after 2 minutes max
+    setTimeout(() => {
+      if (interval) {
+        console.log('Safety timeout - stopping polling after 2 minutes');
+        clearInterval(interval);
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
+        setPollingInterval(null);
+      }
+    }, 120000);
     
     // Initial poll
     poll();

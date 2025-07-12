@@ -16,7 +16,11 @@ export function useWorkflowState(sessionId: string) {
   const workflowQuery = useQuery({
     queryKey: ['/api/workflow', sessionId],
     enabled: !!sessionId,
-    refetchInterval: 2000, // Poll every 2 seconds for faster updates
+    refetchInterval: (data) => {
+      // Poll faster when workflow is active (steps 2+), slower when idle (step 1)
+      const currentStep = data?.session?.currentStep || 1;
+      return currentStep > 1 ? 2000 : 5000; // 2s when active, 5s when idle
+    },
     refetchIntervalInBackground: true,
     staleTime: 0, // Always consider data stale for immediate updates
     gcTime: 0, // Don't cache stale data

@@ -32,17 +32,6 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
     },
     {
       id: 3,
-      title: 'PAM Secret Retrieval',
-      description: 'Retrieve client credentials from PAM vault for elevated access',
-      icon: Shield,
-      details: {
-        pamSecret: 'OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET',
-        pamClientId: '0oat4agvajRwbJlbU697',
-        resourceGroup: 'crm-access-rg',
-      },
-    },
-    {
-      id: 4,
       title: 'IGA Access Request + User Profile',
       description: 'Submit IGA approval request for crm_read scope and fetch user profile',
       icon: Key,
@@ -50,6 +39,17 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
         requestedScope: 'crm_read',
         userProfileScope: 'okta.users.read',
         approver: 'Sarah Chen',
+      },
+    },
+    {
+      id: 4,
+      title: 'PAM Secret Retrieval',
+      description: 'Retrieve client credentials from PAM vault for elevated access',
+      icon: Shield,
+      details: {
+        pamSecret: 'OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET',
+        pamClientId: '0oat4agvajRwbJlbU697',
+        resourceGroup: 'crm-access-rg',
       },
     },
     {

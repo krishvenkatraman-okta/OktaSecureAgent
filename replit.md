@@ -106,6 +106,8 @@ Required environment variables for production deployment:
 - `PAM_RESOURCE_GROUP_ID`: PAM resource group identifier
 - `PAM_PROJECT_ID`: PAM project identifier
 - `PAM_SECRET_ID`: PAM secret identifier
+- `CUSTOM_DOMAIN`: Custom domain for production (agent.kriyahub.com)
+- `NODE_ENV`: Environment setting (production for custom domain support)
 
 ### Build Process
 - Frontend builds with Vite to create optimized React bundle
@@ -131,6 +133,10 @@ Required environment variables for production deployment:
 - **2025-01-12**: CRITICAL FIX: Added automatic workflow progression after authentication - no longer silent after login
 - **2025-01-12**: CRITICAL FIX: Fixed push notification URL construction to properly include https:// prefix
 - **2025-01-12**: Enhanced UX: Chatbot now automatically checks app access and submits IGA request after OIDC authentication
+- **2025-01-12**: MAJOR FIX: Corrected workflow order - IGA now appears before PAM in timeline (proper Zero Trust flow)
+- **2025-01-12**: MAJOR FIX: Added proper backend route for Welcome User Profile step completion with name extraction
+- **2025-01-12**: Added custom domain support for https://agent.kriyahub.com with HTTPS redirect handling
+- **2025-01-12**: Enhanced error handling for token extraction and fallback mechanisms for authentication flow
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
 - **2025-01-11**: Implemented proper PAM secret retrieval with public key parameter in request body per API documentation

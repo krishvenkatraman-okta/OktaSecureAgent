@@ -33,7 +33,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   // Initialize welcome message and auto-check app access after authentication
   useEffect(() => {
     if (isAuthenticated) {
-      // Extract name from ID token for personalized welcome
+      // Extract name from ID token for personalized welcome and update step 2
       fetch(`/api/workflow/${sessionId}/tokens`)
         .then(res => res.json())
         .then(tokens => {
@@ -56,6 +56,17 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             }
           }
           
+          // Update backend that step 2 is complete with the extracted user name
+          fetch(`/api/workflow/${sessionId}/complete-user-profile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userName })
+          }).then(() => {
+            console.log('Step 2 completed: User profile extracted');
+          }).catch(err => {
+            console.error('Failed to complete step 2:', err);
+          });
+          
           setMessages([{
             id: '1',
             type: 'bot',
@@ -64,6 +75,20 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           }]);
           
           // Automatically check app access after authentication
+          setTimeout(() => {
+            checkAppAccess();
+          }, 2000);
+        })
+        .catch(error => {
+          console.error('Error fetching tokens:', error);
+          setMessages([{
+            id: '1',
+            type: 'bot',
+            message: `Welcome! You've been successfully authenticated via Okta OIDC. I'll now automatically check your CRM app access...`,
+            timestamp: new Date(),
+          }]);
+          
+          // Still proceed with app access check even if name extraction fails
           setTimeout(() => {
             checkAppAccess();
           }, 2000);

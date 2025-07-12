@@ -124,6 +124,13 @@ export class OktaService {
   }
 
   getOIDCConfig() {
+    // Support custom domain for production deployment
+    const baseUrl = process.env.NODE_ENV === 'production' && process.env.CUSTOM_DOMAIN 
+      ? `https://${process.env.CUSTOM_DOMAIN}`
+      : process.env.REPLIT_DOMAINS 
+        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+        : 'http://localhost:5000';
+    
     return {
       issuer: 'https://fcxdemo.okta.com/oauth2/default',
       authorizationEndpoint: 'https://fcxdemo.okta.com/oauth2/default/v1/authorize',
@@ -131,7 +138,7 @@ export class OktaService {
       jwksUri: 'https://fcxdemo.okta.com/oauth2/default/v1/keys',
       domain: this.config.domain,
       clientId: this.config.spaClientId,
-      redirectUri: process.env.REPLIT_DOMAINS ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 'http://localhost:5000',
+      redirectUri: baseUrl,
       scopes: ['openid', 'profile', 'email'],
     };
   }

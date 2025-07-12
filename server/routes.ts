@@ -436,6 +436,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete user profile extraction (Step 2)
+  app.post('/api/workflow/:sessionId/complete-user-profile', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { userName } = req.body;
+      
+      // Update workflow to step 2 completed
+      await storage.updateWorkflowSession(sessionId, { currentStep: 2 });
+      
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'user_profile_extracted',
+        eventData: { userName } as any,
+        userId: sessionId,
+      });
+      
+      // Send real-time update
+      sendRealtimeUpdate(sessionId, {
+        type: 'user_profile_completed',
+        step: 2,
+        userName
+      });
+      
+      res.json({ success: true, userName });
+    } catch (error) {
+      console.error('Error completing user profile:', error);
+      res.status(500).json({ error: 'Failed to complete user profile' });
+    }
+  });
+
   // Check Okta app membership using the specific app ID
   app.post('/api/workflow/:sessionId/check-app-access', async (req, res) => {
     try {
@@ -919,6 +949,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error sending push notification:', error);
       res.status(500).json({ error: 'Failed to send push notification' });
     }
+  });
+
+  // Custom domain configuration route for agent.kriyahub.com
+  app.get('/api/config/domain', (req, res) => {
+    const isCustomDomain = req.get('host')?.includes('agent.kriyahub.com');
+    const baseUrl = isCustomDomain 
+      ? 'https://agent.kriyahub.com'
+      : process.env.REPLIT_DOMAINS 
+        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+        : 'http://localhost:5000';
+        
+    res.json({ 
+      baseUrl,
+      isCustomDomain,
+      domain: req.get('host'),
+      protocol: req.protocol 
+    });
+  });
+
+  // Handle custom domain redirects for agent.kriyahub.com
+  app.use((req, res, next) => {
+    const host = req.get('host');
+    if (host?.includes('agent.kriyahub.com') && req.protocol !== 'https') {
+      return res.redirect(301, `https://${host}${req.originalUrl}`);
+    }
+    next();
   });
 
   return httpServer;

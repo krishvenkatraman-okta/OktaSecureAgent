@@ -1009,6 +1009,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Polling push transaction for session ${sessionId}: ${pollUrl}`);
       
+      // Check if this session has been polling for too long (over 5 minutes)
+      const sessionAge = new Date().getTime() - (session.createdAt ? new Date(session.createdAt).getTime() : new Date().getTime());
+      if (sessionAge > 5 * 60 * 1000) { // 5 minutes
+        console.log(`⚠️ Session ${sessionId} has been polling for over 5 minutes - forcing termination`);
+        return res.json({
+          success: false,
+          status: 'TIMEOUT',
+          shouldStopPolling: true,
+          message: 'Push notification polling timed out'
+        });
+      }
+      
       // Poll the transaction status
       const pollResult = await oktaService.pollPushTransaction(pollUrl);
       
@@ -1083,6 +1095,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error in cleanup:', error);
       res.status(500).json({ error: 'Cleanup failed' });
+    }
+  });
+
+  // Force stop push polling for a specific session
+  app.post('/api/workflow/:sessionId/stop-push-polling', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      console.log(`🛑 Force stopping push polling for session ${sessionId}`);
+      
+      // Send a response that will force the frontend to stop polling
+      res.json({ 
+        success: true, 
+        shouldStopPolling: true,
+        status: 'FORCE_STOPPED',
+        message: 'Push notification polling forcefully stopped'
+      });
+    } catch (error) {
+      console.error('Error stopping push polling:', error);
+      res.status(500).json({ error: 'Failed to stop push polling' });
     }
   });
 

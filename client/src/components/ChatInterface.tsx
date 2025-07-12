@@ -235,9 +235,9 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       } catch (error) {
         console.error('Error polling push notification:', error);
         
-        // Stop polling on 410 (session not found) or after max attempts
-        if (error.response?.status === 410 || attempts >= maxAttempts) {
-          console.log('Stopping polling due to error or max attempts reached');
+        // Stop polling on 404/410 (session not found) or after max attempts
+        if (error.response?.status === 404 || error.response?.status === 410 || attempts >= maxAttempts) {
+          console.log('Stopping polling due to session not found, error, or max attempts reached');
           if (interval) clearInterval(interval);
           if (pollingInterval) clearInterval(pollingInterval);
           setPollingInterval(null);
@@ -245,7 +245,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           const errorMessage: ChatMessage = {
             id: nanoid(),
             type: 'bot',
-            message: error.response?.status === 410 ? 
+            message: (error.response?.status === 404 || error.response?.status === 410) ? 
               `⚠️ Session expired. Please refresh the page.` :
               `❌ Error polling push notification: ${error.message}`,
             timestamp: new Date(),

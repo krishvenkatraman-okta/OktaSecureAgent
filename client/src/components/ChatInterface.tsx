@@ -58,26 +58,31 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           }
           
           // Update backend that step 2 is complete with the extracted user name
+          console.log('🔄 Calling complete-user-profile API for session:', sessionId);
           fetch(`/api/workflow/${sessionId}/complete-user-profile`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userName })
           }).then(response => {
+            console.log('✅ Complete-user-profile response status:', response.status);
             if (response.ok) {
               return response.json();
             }
-            throw new Error('Failed to complete user profile');
+            throw new Error(`Failed to complete user profile: ${response.status}`);
           }).then(data => {
-            console.log('Step 2 completed: User profile extracted', data);
-            console.log('Backend returned currentStep:', data.currentStep);
+            console.log('✅ Step 2 completed: User profile extracted', data);
+            console.log('✅ Backend returned currentStep:', data.currentStep);
             
-            // Force immediate page refresh to show timeline update
-            window.location.reload();
+            // Add a small delay to ensure backend state is persisted, then reload
+            console.log('✅ User profile completion confirmed - reloading immediately');
+            setTimeout(() => {
+              window.location.reload();
+            }, 50);
           }).catch(err => {
-            console.error('Failed to complete step 2:', err);
+            console.error('❌ Failed to complete step 2:', err);
             // Still reload to try to get the updated state
             setTimeout(() => {
-              console.log('Reloading page after error...');
+              console.log('🔄 Reloading page after error...');
               window.location.reload();
             }, 500);
           });

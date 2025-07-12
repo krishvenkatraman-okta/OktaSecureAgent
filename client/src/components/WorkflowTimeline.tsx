@@ -67,10 +67,21 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
   ];
 
   const getStepStatus = (stepId: number) => {
+    console.log(`🔍 Timeline step ${stepId} status check - currentStep: ${currentStep}`);
     // Only show step 2+ if user is actually authenticated (currentStep > 1)
-    if (stepId > 1 && currentStep === 1) return 'hidden';
-    if (stepId < currentStep) return 'completed';
-    if (stepId === currentStep) return 'current';
+    if (stepId > 1 && currentStep === 1) {
+      console.log(`Step ${stepId} hidden because currentStep is 1`);
+      return 'hidden';
+    }
+    if (stepId < currentStep) {
+      console.log(`Step ${stepId} completed because stepId < currentStep (${currentStep})`);
+      return 'completed';
+    }
+    if (stepId === currentStep) {
+      console.log(`Step ${stepId} current because stepId === currentStep (${currentStep})`);
+      return 'current';
+    }
+    console.log(`Step ${stepId} pending`);
     return 'pending';
   };
 

@@ -76,10 +76,15 @@ export class MemStorage implements IStorage {
 
   async updateWorkflowSession(sessionId: string, updates: Partial<WorkflowSession>): Promise<WorkflowSession | undefined> {
     const session = this.workflowSessions.get(sessionId);
-    if (!session) return undefined;
+    if (!session) {
+      console.error(`❌ Storage: Session ${sessionId} not found for update`);
+      return undefined;
+    }
     
+    console.log(`🔄 Storage: Updating session ${sessionId} from step ${session.currentStep} to step ${updates.currentStep || session.currentStep}`);
     const updatedSession = { ...session, ...updates, updatedAt: new Date() };
     this.workflowSessions.set(sessionId, updatedSession);
+    console.log(`✅ Storage: Session ${sessionId} updated successfully to step ${updatedSession.currentStep}`);
     return updatedSession;
   }
 

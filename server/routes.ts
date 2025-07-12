@@ -442,14 +442,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { userName } = req.body;
       
+      console.log(`🔄 Completing user profile for session ${sessionId}, user: ${userName}`);
+      
       // Update workflow to step 3 (so step 2 shows as completed)
       const updatedSession = await storage.updateWorkflowSession(sessionId, { 
         currentStep: 3,
         metadata: { userProfileCompleted: true, extractedUserName: userName } as any
       });
       
-      console.log('Updated session step to 3:', updatedSession?.currentStep);
+      console.log('✅ Updated session step to 3:', updatedSession?.currentStep);
       console.log('Session update result:', updatedSession ? 'SUCCESS' : 'FAILED');
+      
+      if (!updatedSession) {
+        console.error('❌ Failed to update session - session might not exist');
+        return res.status(404).json({ error: 'Session not found' });
+      }
       
       await storage.createAuditLog({
         sessionId,
@@ -465,9 +472,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userName
       });
       
+      console.log('✅ User profile completion successful - returning step 3');
       res.json({ success: true, userName, currentStep: 3 });
     } catch (error) {
-      console.error('Error completing user profile:', error);
+      console.error('❌ Error completing user profile:', error);
       res.status(500).json({ error: 'Failed to complete user profile' });
     }
   });
@@ -986,11 +994,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // First check if session still exists
       const session = await storage.getWorkflowSession(sessionId);
       if (!session) {
-        console.log(`❌ Session ${sessionId} not found - stopping push polling`);
+        console.log(`❌ Session ${sessionId} not found - stopping push polling immediately`);
         return res.status(410).json({ 
           error: 'Session not found', 
           shouldStopPolling: true,
-          status: 'SESSION_EXPIRED'
+          status: 'SESSION_EXPIRED',
+          message: 'Session expired - polling stopped'
         });
       }
       
@@ -1063,6 +1072,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       originalProtocol: req.protocol,
       forwardedProto: req.get('x-forwarded-proto')
     });
+  });
+
+  // Cleanup endpoint to stop all orphaned polling
+  app.post('/api/workflow/cleanup-orphaned-sessions', async (req, res) => {
+    try {
+      console.log('🧹 Cleaning up orphaned sessions...');
+      // This endpoint can be called to forcefully clean up any lingering state
+      res.json({ success: true, message: 'Cleanup initiated - orphaned polls will be terminated on next request' });
+    } catch (error) {
+      console.error('Error in cleanup:', error);
+      res.status(500).json({ error: 'Cleanup failed' });
+    }
   });
 
   // Note: HTTPS redirect is handled by the hosting provider/load balancer

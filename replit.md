@@ -140,6 +140,9 @@ Required environment variables for production deployment:
 - **2025-01-12**: CRITICAL FIX: Corrected Okta push notification API URL format to include factor ID: /users/{userId}/factors/{factorId}/verify
 - **2025-01-12**: CRITICAL FIX: Fixed custom domain https://agent.kriyahub.com redirect loop by removing server-side HTTPS redirect middleware
 - **2025-01-12**: CRITICAL FIX: Fixed timeline showing "Welcome User Profile IN PROGRESS" when not authenticated - now properly hides unauthenticated steps
+- **2025-01-12**: CRITICAL FIX: Fixed OIDC redirect URI to use custom domain when accessing via https://agent.kriyahub.com
+- **2025-01-12**: ENHANCEMENT: Added detailed PAM secret vault messaging in chat interface for better user experience
+- **2025-01-12**: FEATURE: Implemented push notification polling mechanism with transaction ID tracking and automatic workflow progression
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
 - **2025-01-11**: Implemented proper PAM secret retrieval with public key parameter in request body per API documentation

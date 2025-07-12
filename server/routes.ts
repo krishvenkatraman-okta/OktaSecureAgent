@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create OIDC authentication URL with PKCE
   app.post('/api/auth/login', async (req, res) => {
     try {
-      const config = oktaService.getOIDCConfig();
+      const config = oktaService.getOIDCConfig(req);
       const state = nanoid();
       const nonce = nanoid();
       
@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Exchange code for tokens with Okta using PKCE
-      const config = oktaService.getOIDCConfig();
+      const config = oktaService.getOIDCConfig(req);
       
       try {
         // Make token exchange request to Okta

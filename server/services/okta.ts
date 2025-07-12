@@ -163,12 +163,16 @@ export class OktaService {
     }
   }
 
-  getOIDCConfig() {
+  getOIDCConfig(req?: any) {
     // Support custom domain for production deployment
     let baseUrl = 'http://localhost:5000';
     
-    // Check for custom domain in environment or host header
-    if (process.env.CUSTOM_DOMAIN === 'agent.kriyahub.com') {
+    // Check request headers first for custom domain detection
+    const host = req?.get ? req.get('host') : null;
+    
+    if (host?.includes('agent.kriyahub.com')) {
+      baseUrl = 'https://agent.kriyahub.com';
+    } else if (process.env.CUSTOM_DOMAIN === 'agent.kriyahub.com') {
       baseUrl = 'https://agent.kriyahub.com';
     } else if (process.env.REPLIT_DOMAINS) {
       baseUrl = `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`;

@@ -200,6 +200,15 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
 
   const handlePamAndCrmAccess = async (targetUser: string) => {
     try {
+      // Add message about PAM secret vault request
+      const pamMessage: ChatMessage = {
+        id: nanoid(),
+        type: 'bot',
+        message: `🔐 Requesting client credentials from PAM secret vault with act_as claims for ${targetUser}...`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, pamMessage]);
+      
       // Step 1: Get PAM credentials with act_as claims
       const pamResponse = await fetch(`/api/workflow/${sessionId}/get-elevated-token`, {
         method: 'POST',
@@ -212,6 +221,14 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       
       if (pamResponse.ok) {
         const pamData = await pamResponse.json();
+        
+        const pamSuccessMessage: ChatMessage = {
+          id: nanoid(),
+          type: 'bot',
+          message: `✅ PAM secret vault credentials retrieved successfully! Client credentials with act_as claims obtained. Now accessing CRM data with delegated permissions...`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, pamSuccessMessage]);
         
         // Step 2: Access CRM data using the elevated token
         const crmResponse = await fetch(`/api/workflow/${sessionId}/access-crm`, {

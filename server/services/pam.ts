@@ -78,6 +78,10 @@ export class PAMService {
         secretId: this.config.secretId
       });
       
+      console.log('🔍 IMPORTANT: The configured secret ID is:', this.config.secretId);
+      console.log('🔍 If this doesn\'t match your working Postman secret ID, update PAM_SECRET_ID environment variable');
+      console.log('🔍 Your Postman URL uses a different secret ID than what\'s configured here');
+      
       // Check if all required config is available
       const missingConfigs = [];
       if (!this.config.apiKeyId) missingConfigs.push('PAM_API_KEY_ID');

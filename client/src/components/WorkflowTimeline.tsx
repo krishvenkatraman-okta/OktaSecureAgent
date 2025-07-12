@@ -65,6 +65,8 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
   ];
 
   const getStepStatus = (stepId: number) => {
+    // Only show step 2+ if user is actually authenticated (currentStep > 1)
+    if (stepId > 1 && currentStep === 1) return 'hidden';
     if (stepId < currentStep) return 'completed';
     if (stepId === currentStep) return 'current';
     return 'pending';
@@ -130,6 +132,9 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
           {steps.map((step) => {
             const status = getStepStatus(step.id);
             const isActive = status !== 'pending';
+            
+            // Don't render hidden steps
+            if (status === 'hidden') return null;
             
             return (
               <div key={step.id} className={`flex items-start space-x-4 ${!isActive ? 'opacity-50' : ''}`}>

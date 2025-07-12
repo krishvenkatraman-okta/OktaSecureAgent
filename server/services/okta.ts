@@ -90,14 +90,15 @@ export class OktaService {
     }
   }
 
-  async sendVerifyPush(userId: string, message: string): Promise<any> {
+  async sendVerifyPush(userId: string, message: string, factorId: string = 'opft473jgukmcdFGI697'): Promise<any> {
     try {
       // Ensure domain has https:// prefix
       const domain = this.config.domain.startsWith('http') ? this.config.domain : `https://${this.config.domain}`;
-      const url = `${domain}/api/v1/users/${userId}/factors/push/verify`;
+      const url = `${domain}/api/v1/users/${userId}/factors/${factorId}/verify`;
       
       console.log('Push notification URL constructed:', url);
       console.log('UserId parameter:', userId);
+      console.log('FactorId parameter:', factorId);
       console.log('Domain config:', this.config.domain);
       
       const response = await axios.post(

@@ -137,6 +137,7 @@ Required environment variables for production deployment:
 - **2025-01-12**: MAJOR FIX: Added proper backend route for Welcome User Profile step completion with name extraction
 - **2025-01-12**: Added custom domain support for https://agent.kriyahub.com with HTTPS redirect handling
 - **2025-01-12**: Enhanced error handling for token extraction and fallback mechanisms for authentication flow
+- **2025-01-12**: CRITICAL FIX: Corrected Okta push notification API URL format to include factor ID: /users/{userId}/factors/{factorId}/verify
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
 - **2025-01-11**: Implemented proper PAM secret retrieval with public key parameter in request body per API documentation

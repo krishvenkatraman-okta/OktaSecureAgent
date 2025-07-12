@@ -728,9 +728,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send Okta Verify push for dynamic consent
       try {
+        const oktaUserId = '00usgiat1bZOUk7Pq697'; // Brandon's actual Okta user ID
+        const factorId = 'opft473jgukmcdFGI697'; // Brandon's push factor ID
         await oktaService.sendVerifyPush(
-          targetUser || 'brandon.stark@acme.com',
-          'Approve AI agent to update Salesforce CRM for Brandon Stark?'
+          oktaUserId,
+          'Approve AI agent to update Salesforce CRM for Brandon Stark?',
+          factorId
         );
       } catch (pushError) {
         console.warn('Failed to send Okta Verify push:', pushError);
@@ -937,8 +940,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const oktaUserId = '00usgiat1bZOUk7Pq697'; // Brandon's Okta user ID  
       const factorId = 'opft473jgukmcdFGI697'; // Push factor ID
       
-      // Send push notification using Okta Factors API
-      const pushResult = await oktaService.sendVerifyPush(oktaUserId, 'AI Agent requesting write access to CRM data');
+      // Send push notification using Okta Factors API with correct URL format
+      const pushResult = await oktaService.sendVerifyPush(oktaUserId, 'AI Agent requesting write access to CRM data', factorId);
       
       res.json({ 
         success: true, 

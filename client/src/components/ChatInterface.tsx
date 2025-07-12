@@ -140,7 +140,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           console.log('Poll response:', data);
           
           if (data.status === 'SUCCESS') {
-            // Push was approved
+            // Push was approved - stop polling and continue workflow
             if (pollingInterval) {
               clearInterval(pollingInterval);
               setPollingInterval(null);
@@ -149,12 +149,12 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             const approvedMessage: ChatMessage = {
               id: nanoid(),
               type: 'bot',
-              message: `✅ ${targetUser} approved your request! Now getting PAM credentials and accessing CRM data...`,
+              message: `✅ Push approval received from Brandon! Moving to PAM to retrieve client credentials with act_as claims...`,
               timestamp: new Date(),
             };
             setMessages(prev => [...prev, approvedMessage]);
             
-            // Continue with PAM and CRM access
+            // Immediately continue with PAM and CRM access
             handlePamAndCrmAccess(targetUser);
             
           } else if (data.status === 'REJECTED') {
@@ -172,8 +172,8 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             };
             setMessages(prev => [...prev, deniedMessage]);
             
-          } else if (attempts >= maxAttempts) {
-            // Timeout
+          } else if (data.status === 'WAITING' && attempts >= maxAttempts) {
+            // Timeout after max attempts
             if (pollingInterval) {
               clearInterval(pollingInterval);
               setPollingInterval(null);
@@ -186,6 +186,9 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               timestamp: new Date(),
             };
             setMessages(prev => [...prev, timeoutMessage]);
+          } else if (data.status === 'WAITING') {
+            // Still waiting, continue polling
+            console.log(`Still waiting for ${targetUser} to respond... (attempt ${attempts}/${maxAttempts})`);
           }
         }
       } catch (error) {
@@ -193,6 +196,14 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         if (attempts >= maxAttempts && pollingInterval) {
           clearInterval(pollingInterval);
           setPollingInterval(null);
+          
+          const errorMessage: ChatMessage = {
+            id: nanoid(),
+            type: 'bot',
+            message: `❌ Error polling push notification: ${error.message}`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, errorMessage]);
         }
       }
     };

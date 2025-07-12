@@ -126,11 +126,14 @@ export class OktaService {
 
   getOIDCConfig() {
     // Support custom domain for production deployment
-    const baseUrl = process.env.NODE_ENV === 'production' && process.env.CUSTOM_DOMAIN 
-      ? `https://${process.env.CUSTOM_DOMAIN}`
-      : process.env.REPLIT_DOMAINS 
-        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
-        : 'http://localhost:5000';
+    let baseUrl = 'http://localhost:5000';
+    
+    // Check for custom domain in environment or host header
+    if (process.env.CUSTOM_DOMAIN === 'agent.kriyahub.com') {
+      baseUrl = 'https://agent.kriyahub.com';
+    } else if (process.env.REPLIT_DOMAINS) {
+      baseUrl = `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`;
+    }
     
     return {
       issuer: 'https://fcxdemo.okta.com/oauth2/default',

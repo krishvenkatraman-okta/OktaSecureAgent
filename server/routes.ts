@@ -956,29 +956,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Custom domain configuration route for agent.kriyahub.com
   app.get('/api/config/domain', (req, res) => {
-    const isCustomDomain = req.get('host')?.includes('agent.kriyahub.com');
-    const baseUrl = isCustomDomain 
-      ? 'https://agent.kriyahub.com'
-      : process.env.REPLIT_DOMAINS 
-        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
-        : 'http://localhost:5000';
+    const host = req.get('host');
+    const proto = req.get('x-forwarded-proto') || req.protocol;
+    const isCustomDomain = host?.includes('agent.kriyahub.com');
+    
+    let baseUrl = 'http://localhost:5000';
+    if (isCustomDomain) {
+      baseUrl = 'https://agent.kriyahub.com';
+    } else if (process.env.REPLIT_DOMAINS) {
+      baseUrl = `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`;
+    }
         
     res.json({ 
       baseUrl,
       isCustomDomain,
-      domain: req.get('host'),
-      protocol: req.protocol 
+      domain: host,
+      protocol: proto,
+      originalProtocol: req.protocol,
+      forwardedProto: req.get('x-forwarded-proto')
     });
   });
 
-  // Handle custom domain redirects for agent.kriyahub.com
-  app.use((req, res, next) => {
-    const host = req.get('host');
-    if (host?.includes('agent.kriyahub.com') && req.protocol !== 'https') {
-      return res.redirect(301, `https://${host}${req.originalUrl}`);
-    }
-    next();
-  });
+  // Note: HTTPS redirect is handled by the hosting provider/load balancer
+  // Custom domain agent.kriyahub.com should already be configured with HTTPS
 
   return httpServer;
 }

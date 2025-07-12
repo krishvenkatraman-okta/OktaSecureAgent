@@ -147,6 +147,25 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           const data = await response.json();
           console.log('Poll response:', data);
           
+          // Check if we should stop polling (session expired, success, etc.)
+          if (data.shouldStopPolling || data.status === 'SESSION_EXPIRED') {
+            console.log('Server indicated to stop polling - clearing intervals');
+            if (interval) clearInterval(interval);
+            if (pollingInterval) clearInterval(pollingInterval);
+            setPollingInterval(null);
+            
+            if (data.status === 'SESSION_EXPIRED') {
+              const errorMessage: ChatMessage = {
+                id: nanoid(),
+                type: 'bot',
+                message: `⚠️ Session expired. Please refresh the page to start a new session.`,
+                timestamp: new Date(),
+              };
+              setMessages(prev => [...prev, errorMessage]);
+            }
+            return true; // Stop polling
+          }
+          
           if (data.status === 'SUCCESS' || data.isApproved === true) {
             // CRITICAL: Stop all polling immediately
             console.log('SUCCESS detected - stopping all polling NOW');
@@ -210,17 +229,24 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         }
       } catch (error) {
         console.error('Error polling push notification:', error);
-        if (attempts >= maxAttempts && pollingInterval) {
-          clearInterval(pollingInterval);
+        
+        // Stop polling on 410 (session not found) or after max attempts
+        if (error.response?.status === 410 || attempts >= maxAttempts) {
+          console.log('Stopping polling due to error or max attempts reached');
+          if (interval) clearInterval(interval);
+          if (pollingInterval) clearInterval(pollingInterval);
           setPollingInterval(null);
           
           const errorMessage: ChatMessage = {
             id: nanoid(),
             type: 'bot',
-            message: `❌ Error polling push notification: ${error.message}`,
+            message: error.response?.status === 410 ? 
+              `⚠️ Session expired. Please refresh the page.` :
+              `❌ Error polling push notification: ${error.message}`,
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, errorMessage]);
+          return true; // Stop polling
         }
       }
     };

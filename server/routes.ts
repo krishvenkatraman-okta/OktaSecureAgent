@@ -983,6 +983,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { pollUrl } = req.body;
       
+      // First check if session still exists
+      const session = await storage.getWorkflowSession(sessionId);
+      if (!session) {
+        console.log(`❌ Session ${sessionId} not found - stopping push polling`);
+        return res.status(410).json({ 
+          error: 'Session not found', 
+          shouldStopPolling: true,
+          status: 'SESSION_EXPIRED'
+        });
+      }
+      
       if (!pollUrl) {
         return res.status(400).json({ error: 'Poll URL is required' });
       }
@@ -1019,11 +1030,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         pollResult,
         status: pollResult.factorResult,
-        isApproved: pollResult.factorResult === 'SUCCESS'
+        isApproved: pollResult.factorResult === 'SUCCESS',
+        shouldStopPolling: pollResult.factorResult === 'SUCCESS' || pollResult.factorResult === 'REJECTED'
       });
     } catch (error) {
       console.error('Error polling push notification:', error);
-      res.status(500).json({ error: 'Failed to poll push notification' });
+      res.status(500).json({ 
+        error: 'Failed to poll push notification',
+        shouldStopPolling: true // Stop polling on server errors too
+      });
     }
   });
 

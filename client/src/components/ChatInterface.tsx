@@ -59,6 +59,8 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           
           // Update backend that step 2 is complete with the extracted user name
           console.log('🔄 Calling complete-user-profile API for session:', sessionId);
+          console.log('🔄 User name extracted:', userName);
+          
           fetch(`/api/workflow/${sessionId}/complete-user-profile`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -70,21 +72,20 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             }
             throw new Error(`Failed to complete user profile: ${response.status}`);
           }).then(data => {
-            console.log('✅ Step 2 completed: User profile extracted', data);
-            console.log('✅ Backend returned currentStep:', data.currentStep);
+            console.log('✅ Step 2 completion API successful:', data);
+            console.log('✅ Backend confirmed currentStep update to:', data.currentStep);
             
-            // Add a small delay to ensure backend state is persisted, then reload
-            console.log('✅ User profile completion confirmed - reloading immediately');
-            setTimeout(() => {
-              window.location.reload();
-            }, 50);
+            // Force immediate hard reload to refresh all state
+            console.log('🔄 Forcing HARD page reload to refresh state...');
+            window.location.reload(true);
           }).catch(err => {
             console.error('❌ Failed to complete step 2:', err);
+            console.log('❌ Will reload anyway to check current state...');
             // Still reload to try to get the updated state
             setTimeout(() => {
-              console.log('🔄 Reloading page after error...');
-              window.location.reload();
-            }, 500);
+              console.log('🔄 Error case - forcing HARD reload...');
+              window.location.reload(true);
+            }, 100);
           });
           
           setMessages([{

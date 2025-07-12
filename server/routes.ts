@@ -442,7 +442,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { userName } = req.body;
       
-      console.log(`🔄 Completing user profile for session ${sessionId}, user: ${userName}`);
+      console.log(`🔄 STARTING user profile completion for session ${sessionId}`);
+      console.log(`🔄 User name to save: "${userName}"`);
+      
+      // Get current session state first
+      const currentSession = await storage.getWorkflowSession(sessionId);
+      console.log('📍 Current session before update:', currentSession ? `Step ${currentSession.currentStep}` : 'NOT FOUND');
       
       // Update workflow to step 3 (so step 2 shows as completed)
       const updatedSession = await storage.updateWorkflowSession(sessionId, { 
@@ -450,8 +455,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { userProfileCompleted: true, extractedUserName: userName } as any
       });
       
-      console.log('✅ Updated session step to 3:', updatedSession?.currentStep);
-      console.log('Session update result:', updatedSession ? 'SUCCESS' : 'FAILED');
+      console.log('✅ COMPLETED session update to step 3');
+      console.log('✅ Updated session object:', updatedSession);
+      console.log('✅ Final currentStep value:', updatedSession?.currentStep);
       
       if (!updatedSession) {
         console.error('❌ Failed to update session - session might not exist');

@@ -92,22 +92,39 @@ export class OktaService {
 
   async sendVerifyPush(userId: string, message: string): Promise<any> {
     try {
-      const response = await axios.post(
-        `https://${this.config.domain}/api/v1/users/${userId}/factors/push/verify`,
-        {
-          message,
+      // Construct URL carefully to avoid double slashes
+      const url = `https://fcxdemo.okta.com/api/v1/users/${userId}/factors/push/verify`;
+      console.log('Push notification URL constructed:', url);
+      console.log('UserId parameter:', userId);
+      console.log('Domain config:', this.config.domain);
+      
+      // Create axios request config with explicit URL
+      const requestConfig = {
+        method: 'POST',
+        url: url,
+        data: { message },
+        headers: {
+          'Authorization': `SSWS ${this.config.apiToken}`,
+          'Content-Type': 'application/json',
         },
-        {
-          headers: {
-            'Authorization': `SSWS ${this.config.apiToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      };
+      
+      console.log('Axios request config:', JSON.stringify(requestConfig, null, 2));
+      
+      const response = await axios(requestConfig);
 
+      console.log('Push notification response:', response.status, response.data);
       return response.data;
     } catch (error) {
       console.error('Error sending Okta Verify push:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Request URL from error:', error.config?.url);
+      }
+      if (error.request) {
+        console.error('Request that was made:', error.request);
+      }
       throw new Error('Failed to send Okta Verify push notification');
     }
   }

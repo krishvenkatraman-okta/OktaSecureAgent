@@ -64,8 +64,12 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             body: JSON.stringify({ userName })
           }).then(response => response.json()).then(data => {
             console.log('Step 2 completed: User profile extracted', data);
-            // Force timeline refresh immediately to show step 2 as completed
-            window.location.reload();
+            console.log('Backend returned currentStep:', data.currentStep);
+            // Force timeline refresh with a longer delay to ensure backend update completes
+            setTimeout(() => {
+              console.log('Reloading page to refresh timeline...');
+              window.location.reload();
+            }, 1000);
           }).catch(err => {
             console.error('Failed to complete step 2:', err);
           });
@@ -135,11 +139,11 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           console.log('Poll response:', data);
           
           if (data.status === 'SUCCESS') {
-            // Push was approved - stop polling and continue workflow
-            if (pollingInterval) {
-              clearInterval(pollingInterval);
-              setPollingInterval(null);
-            }
+            // Push was approved - IMMEDIATELY stop polling
+            clearInterval(interval);
+            setPollingInterval(null);
+            
+            console.log('SUCCESS detected - polling stopped');
             
             const approvedMessage: ChatMessage = {
               id: nanoid(),
@@ -151,6 +155,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             
             // Immediately continue with PAM and CRM access
             handlePamAndCrmAccess(targetUser);
+            return; // Exit polling completely
             
           } else if (data.status === 'REJECTED') {
             // Push was denied

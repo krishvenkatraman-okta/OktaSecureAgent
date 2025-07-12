@@ -443,10 +443,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userName } = req.body;
       
       // Update workflow to step 3 (so step 2 shows as completed)
-      await storage.updateWorkflowSession(sessionId, { 
+      const updatedSession = await storage.updateWorkflowSession(sessionId, { 
         currentStep: 3,
         metadata: { userProfileCompleted: true, extractedUserName: userName } as any
       });
+      
+      console.log('Updated session step to 3:', updatedSession);
       
       await storage.createAuditLog({
         sessionId,

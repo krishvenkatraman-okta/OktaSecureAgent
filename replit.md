@@ -145,6 +145,9 @@ Required environment variables for production deployment:
 - **2025-01-12**: FEATURE: Implemented push notification polling mechanism with transaction ID tracking and automatic workflow progression
 - **2025-01-12**: CRITICAL FIX: Fixed push notification API to use empty body {} for challenge initiation (was causing 400 "request body was not well-formed" error)
 - **2025-01-12**: CRITICAL FIX: Fixed "Welcome User Profile" timeline step completion by forcing page refresh after step advancement
+- **2025-01-12**: MAJOR FIX: Corrected PAM API implementation to match working curl command - updated domain to fcxdemo.pam.okta.com
+- **2025-01-12**: MAJOR FIX: Fixed push notification polling to stop immediately on SUCCESS status with proper interval clearing
+- **2025-01-12**: ENHANCEMENT: Updated PAM workflow to use correct OAuth client credentials flow and JWK public key format
 - **2025-01-12**: SECURITY: Custom domain https://agent.kriyahub.com may show certificate warnings in some browsers - this is expected for demo environments
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier

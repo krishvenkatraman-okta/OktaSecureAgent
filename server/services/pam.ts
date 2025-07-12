@@ -16,7 +16,7 @@ export class PAMService {
 
   constructor() {
     this.config = {
-      domain: 'fcxdemo.okta.com',  // Updated to match your working curl command
+      domain: 'fcxdemo.pam.okta.com',  // Correct PAM domain from your curl
       teamName: process.env.PAM_TEAM_NAME || 'fcxdemo',
       apiKeyId: process.env.PAM_API_KEY_ID || '',
       apiKeySecret: process.env.PAM_API_KEY_SECRET || '',
@@ -121,7 +121,7 @@ export class PAMService {
       const { publicKey, privateKey } = await this.generateRSAKeyPair();
       
       // Step 3: Make PAM reveal request exactly matching your working curl command
-      const pamApiUrl = `https://fcxdemo.okta.com/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}`;
+      const pamApiUrl = `https://${this.config.domain}/v1/teams/${this.config.teamName}/resource_groups/${this.config.resourceGroupId}/projects/${this.config.projectId}/secrets/${this.config.secretId}`;
       
       const requestBody = {
         public_key: {

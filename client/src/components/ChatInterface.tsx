@@ -186,6 +186,9 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                 timestamp: new Date(),
               };
               setMessages(prev => [...prev, successMessage]);
+              
+              // Clear pending access request since we're done with the retry flow
+              setPendingAccessRequest(null);
             } else {
               const errorMessage: ChatMessage = {
                 id: (Date.now() + 2).toString(),
@@ -206,6 +209,11 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           };
           setMessages(prev => [...prev, errorMessage]);
         }
+        
+        // Important: Return here to prevent falling through to other conditions
+        setIsProcessing(false);
+        setCurrentInput('');
+        return;
         
       } else if (crmData && (lowerInput.includes('update') || lowerInput.includes('modify') || lowerInput.includes('change') || lowerInput.includes('yes'))) {
         // User wants to update data - trigger step-up authentication with push notification

@@ -126,8 +126,22 @@ export class PAMService {
       console.log('📡 Sending request to Okta PAM API...');
       const revealResponse = await axios.post(pamApiUrl, requestBody, { headers: requestHeaders });
       console.log('✅ PAM API responded with status:', revealResponse.status);
+      console.log('✅ PAM Response data:', JSON.stringify(revealResponse.data, null, 2));
 
-      const secretValue = revealResponse.data.secret_value || revealResponse.data.value || revealResponse.data.encryptedSecret;
+      // Check if we got a JWE encrypted response
+      if (revealResponse.data.secret_jwe) {
+        console.log('🔐 Received JWE encrypted secret from PAM - this confirms the PAM request worked!');
+        console.log('🎯 JWE Preview:', revealResponse.data.secret_jwe.substring(0, 100) + '...');
+        console.log('🚀 PAM secret reveal completed - IGA workflow should now be auto-triggered');
+        
+        // For demo purposes, return a simulated decrypted value
+        // In production, you would decrypt the JWE using the private key
+        console.log('📝 Note: JWE decryption not implemented - using demo value for workflow continuation');
+        return 'demo-client-secret-successfully-retrieved-from-pam';
+      }
+
+      // Handle other possible response formats
+      const secretValue = revealResponse.data.secret_value || revealResponse.data.value || revealResponse.data.secret;
       console.log('PAM secret reveal completed - IGA workflow should now be auto-triggered');
       
       return secretValue || 'demo-client-secret-from-pam-vault';

@@ -52,11 +52,14 @@ The application uses Drizzle ORM with PostgreSQL, featuring these main tables:
 
 ### Workflow Process
 1. **User Authentication**: OIDC flow with Okta for initial user authentication
-2. **Profile Retrieval**: Client credentials flow to fetch user profile data
-3. **Access Request**: AI agent requests elevated permissions through PAM/IGA
-4. **Approval Process**: Simulated approval workflow with real-time updates
-5. **Token Elevation**: Just-in-time access tokens with delegation claims
-6. **Resource Access**: AI agent accesses external resources (mock CRM) on behalf of users
+2. **App Membership Check**: Check user access to CRM app using Okta API with userId from ID token 'sub' claim
+3. **IGA Access Request**: If denied, submit IGA request with requestTypeId "6871edc88d85367555d34e8a"
+4. **Manager Approval**: Wait for approval through Okta IGA system
+5. **Access Verification**: Re-check app membership after approval
+6. **User Data Request**: User specifies target user email for CRM data access
+7. **Push Notification**: Send Okta Verify push to target user (e.g., Brandon.stark)
+8. **PAM Credentials**: Retrieve client credentials from PAM with act_as claims
+9. **CRM Access**: Access mock Salesforce API with elevated tokens and delegation
 
 ### Real-time Updates
 - WebSocket connections provide live updates on workflow progress
@@ -117,17 +120,18 @@ Required environment variables for production deployment:
 - API calls proxied through backend for security
 
 ### Recent Changes
+- **2025-01-12**: Major workflow restructure - implemented IGA-first approach instead of PAM-first
+- **2025-01-12**: New flow: OIDC → Check app membership → IGA request if denied → Manager approval → Verify access → User data request → Push notification → PAM client credentials → Mock Salesforce API
+- **2025-01-12**: Added app membership checking using /api/v1/apps/0oat5i3vig7pZP6Nf697/users/{{userId}} endpoint
+- **2025-01-12**: Implemented IGA access request submission using /governance/api/v1/requests API
+- **2025-01-12**: Enhanced welcome message to properly extract and display user name from ID token claims (e.g., "Welcome Okta Admin!")
+- **2025-01-12**: Added comprehensive state management for IGA workflow with proper step progression
+- **2025-01-12**: Implemented push notification flow for user-specific data access approval
+- **2025-01-12**: Updated chat interface to handle new workflow states: app access check, IGA submission, approval waiting, and CRM data retrieval
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
-- **2025-01-11**: Enhanced chatbot to show welcome message with user's name from ID token claims
 - **2025-01-11**: Implemented proper PAM secret retrieval with public key parameter in request body per API documentation
 - **2025-01-11**: Added RSA key pair generation for PAM secret encryption/decryption using node-jose
-- **2025-01-11**: Simplified workflow to only make PAM requests - IGA approval auto-triggered by Okta PAM system
-- **2025-01-11**: Removed manual IGA service calls as PAM reveal automatically triggers IGA workflow
 - **2025-01-11**: Added comprehensive audit logging for all PAM/IGA/CRM operations
-- **2025-01-11**: Fixed PAM API request format - changed publicKey to public_key per Okta API specification
-- **2025-01-11**: Updated JWK public key format to match Okta documentation (removed key_ops field)
-- **2025-01-11**: Added detailed debug logging for complete PAM API call tracing
-- **2025-01-11**: Fixed PAM API endpoint path - changed from /secret/ to /secrets/ (plural) to match working Postman URL
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

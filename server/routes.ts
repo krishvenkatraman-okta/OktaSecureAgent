@@ -436,6 +436,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check Okta app membership using the specific app ID
+  app.post('/api/workflow/:sessionId/check-app-access', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const session = await storage.getWorkflowSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Get ID token to extract userId (sub claim) 
+      const idToken = await storage.getToken(sessionId, 'id_token');
+      if (!idToken) {
+        return res.status(400).json({ error: 'ID token not found' });
+      }
+
+      // Extract userId from ID token
+      const payload = JSON.parse(atob(idToken.tokenValue.split('.')[1]));
+      const userId = payload.sub;
+
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'app_access_check',
+        eventData: { userId, appId: '0oat5i3vig7pZP6Nf697' } as Record<string, any>,
+        userId: session.userId,
+      });
+
+      // Check app membership using Okta API
+      try {
+        const response = await fetch(`https://fcxdemo.okta.com/api/v1/apps/0oat5i3vig7pZP6Nf697/users/${userId}`, {
+          headers: {
+            'Authorization': `SSWS ${process.env.OKTA_API_TOKEN}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const hasAccess = response.ok;
+
+        await storage.createAuditLog({
+          sessionId,
+          eventType: 'app_access_result',
+          eventData: { userId, hasAccess, statusCode: response.status } as Record<string, any>,
+          userId: session.userId,
+        });
+
+        res.json({ hasAccess, userId });
+      } catch (error) {
+        console.error('Error checking app access:', error);
+        // For demo purposes, return false for access check failures
+        res.json({ hasAccess: false, error: 'Failed to check app access' });
+      }
+    } catch (error) {
+      console.error('Error in check-app-access:', error);
+      res.status(500).json({ error: 'Failed to check app access' });
+    }
+  });
+
+  // Submit IGA access request
+  app.post('/api/workflow/:sessionId/submit-iga-request', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { requestTypeId, subject } = req.body;
+      const session = await storage.getWorkflowSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'iga_request_submit',
+        eventData: { requestTypeId, subject } as Record<string, any>,
+        userId: session.userId,
+      });
+
+      // Submit IGA request using the provided API
+      try {
+        const response = await fetch('https://fcxdemo.okta.com/governance/api/v1/requests', {
+          method: 'POST',
+          headers: {
+            'Authorization': `SSWS ${process.env.OKTA_API_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            requestTypeId,
+            subject
+          })
+        });
+
+        if (response.ok) {
+          const igaData = await response.json();
+          
+          // Store IGA request in our system
+          const accessRequest = await storage.createAccessRequest({
+            sessionId,
+            requestType: 'iga_access',
+            targetUser: session.userId,
+            status: 'pending',
+            justification: `IGA request: ${subject}`,
+          });
+
+          await storage.createAuditLog({
+            sessionId,
+            eventType: 'iga_request_created',
+            eventData: { igaRequestId: igaData.id, requestId: accessRequest.id } as Record<string, any>,
+            userId: session.userId,
+          });
+
+          sendRealtimeUpdate(sessionId, {
+            type: 'iga_request_submitted',
+            sessionId,
+            requestId: accessRequest.id
+          });
+
+          res.json({ success: true, requestId: accessRequest.id, igaData });
+        } else {
+          const errorData = await response.text();
+          console.error('IGA request failed:', response.status, errorData);
+          res.status(400).json({ error: 'Failed to submit IGA request', details: errorData });
+        }
+      } catch (error) {
+        console.error('Error submitting IGA request:', error);
+        res.status(500).json({ error: 'Failed to submit IGA request' });
+      }
+    } catch (error) {
+      console.error('Error in submit-iga-request:', error);
+      res.status(500).json({ error: 'Failed to process IGA request' });
+    }
+  });
+
   // Simulate approval (for demo purposes)
   app.post('/api/workflow/:sessionId/simulate-approval', async (req, res) => {
     try {

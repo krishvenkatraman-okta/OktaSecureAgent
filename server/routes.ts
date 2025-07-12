@@ -442,24 +442,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { userName } = req.body;
       
-      // Update workflow to step 2 completed
-      await storage.updateWorkflowSession(sessionId, { currentStep: 2 });
+      // Update workflow to step 3 (so step 2 shows as completed)
+      await storage.updateWorkflowSession(sessionId, { 
+        currentStep: 3,
+        metadata: { userProfileCompleted: true, extractedUserName: userName } as any
+      });
       
       await storage.createAuditLog({
         sessionId,
         eventType: 'user_profile_extracted',
-        eventData: { userName } as any,
+        eventData: { userName, stepCompleted: 2 } as any,
         userId: sessionId,
       });
       
       // Send real-time update
       sendRealtimeUpdate(sessionId, {
         type: 'user_profile_completed',
-        step: 2,
+        step: 3, // Now at step 3, so step 2 is completed
         userName
       });
       
-      res.json({ success: true, userName });
+      res.json({ success: true, userName, currentStep: 3 });
     } catch (error) {
       console.error('Error completing user profile:', error);
       res.status(500).json({ error: 'Failed to complete user profile' });

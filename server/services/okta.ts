@@ -105,7 +105,7 @@ export class OktaService {
         url,
         {
           factorResult: 'WAITING',
-          expiresAt: '2025-07-12T06:21:60.627Z', // 5 minutes from now
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
           profile: {
             credentialId: 'brandon.stark@acme.com',
             deviceType: 'SmartPhone_IPhone',

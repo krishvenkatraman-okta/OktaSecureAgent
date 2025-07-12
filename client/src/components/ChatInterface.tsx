@@ -62,16 +62,21 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userName })
-          }).then(response => response.json()).then(data => {
+          }).then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Failed to complete user profile');
+          }).then(data => {
             console.log('Step 2 completed: User profile extracted', data);
             console.log('Backend returned currentStep:', data.currentStep);
-            // Force timeline refresh with a longer delay to ensure backend update completes
-            setTimeout(() => {
-              console.log('Reloading page to refresh timeline...');
-              window.location.reload();
-            }, 1000);
+            
+            // Force immediate refresh to show timeline update
+            window.location.reload();
           }).catch(err => {
             console.error('Failed to complete step 2:', err);
+            // Still reload to try to get the updated state
+            setTimeout(() => window.location.reload(), 2000);
           });
           
           setMessages([{
@@ -138,12 +143,11 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           const data = await response.json();
           console.log('Poll response:', data);
           
-          if (data.status === 'SUCCESS') {
-            // Push was approved - IMMEDIATELY stop polling
+          if (data.status === 'SUCCESS' || data.isApproved === true) {
+            // CRITICAL: Stop all polling immediately
+            console.log('SUCCESS detected - stopping all polling NOW');
             clearInterval(interval);
             setPollingInterval(null);
-            
-            console.log('SUCCESS detected - polling stopped');
             
             const approvedMessage: ChatMessage = {
               id: nanoid(),
@@ -155,7 +159,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             
             // Immediately continue with PAM and CRM access
             handlePamAndCrmAccess(targetUser);
-            return; // Exit polling completely
+            return true; // Signal success to stop outer polling
             
           } else if (data.status === 'REJECTED') {
             // Push was denied
@@ -209,7 +213,13 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
     };
     
     // Start polling every 6 seconds
-    const interval = setInterval(poll, 6000);
+    const interval = setInterval(async () => {
+      const result = await poll();
+      if (result === true) {
+        clearInterval(interval);
+        setPollingInterval(null);
+      }
+    }, 6000);
     setPollingInterval(interval);
     
     // Initial poll

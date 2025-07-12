@@ -448,7 +448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         metadata: { userProfileCompleted: true, extractedUserName: userName } as any
       });
       
-      console.log('Updated session step to 3:', updatedSession);
+      console.log('Updated session step to 3:', updatedSession?.currentStep);
       
       await storage.createAuditLog({
         sessionId,

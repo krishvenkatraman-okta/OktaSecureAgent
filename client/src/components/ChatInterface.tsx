@@ -141,11 +141,11 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         }
         
       } else if (lowerInput.includes('retry') && pendingAccessRequest) {
-        // Retry after approval - get client credentials and access token
+        // Auto-proceed after approval - get client credentials and CRM data
         const processingMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
-          message: `Access approved! Now requesting client credentials from PAM vault and obtaining access token with crm_read scope and act_as claim for ${pendingAccessRequest.targetUser}...`,
+          message: `Access approved! Now using PAM secret to get client credentials and retrieve CRM data for ${pendingAccessRequest.targetUser}...`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, processingMessage]);
@@ -164,38 +164,37 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           if (tokenResponse.ok) {
             const tokenData = await tokenResponse.json();
             
-            setTimeout(() => {
-              const tokenMessage: ChatMessage = {
+            // Step 2: Automatically fetch CRM data using the access token
+            const crmResponse = await fetch(`/api/workflow/${sessionId}/access-crm`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                targetUser: pendingAccessRequest.targetUser,
+                accessToken: tokenData.accessToken
+              }),
+            });
+            
+            if (crmResponse.ok) {
+              const crmData = await crmResponse.json();
+              setCrmData(crmData);
+              setActingAsUser(pendingAccessRequest.targetUser);
+              
+              const successMessage: ChatMessage = {
                 id: (Date.now() + 2).toString(),
                 type: 'bot',
-                message: `✅ Successfully obtained access token with crm_read scope and act_as claim for ${tokenData.actingAs}. Now retrieving CRM data...`,
+                message: `✅ Successfully retrieved CRM data for ${pendingAccessRequest.targetUser}!\n\n**Contact Information:**\n- Name: ${crmData.firstName} ${crmData.lastName}\n- Email: ${crmData.email}\n- Company: ${crmData.company}\n- Phone: ${crmData.phone || 'N/A'}\n- Status: ${crmData.status}\n\nWould you like to update this contact's information? (This would require elevated write access and step-up authentication)`,
                 timestamp: new Date(),
               };
-              setMessages(prev => [...prev, tokenMessage]);
-            }, 1000);
-            
-            // Step 2: Get CRM data using the elevated token
-            setTimeout(async () => {
-              const crmResponse = await fetch(`/api/workflow/${sessionId}/get-crm-data`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetUser: pendingAccessRequest.targetUser }),
-              });
-              
-              if (crmResponse.ok) {
-                const crmData = await crmResponse.json();
-                setCrmData(crmData);
-                setActingAsUser(crmData.actingAs || pendingAccessRequest.targetUser);
-                
-                const botMessage: ChatMessage = {
-                  id: (Date.now() + 3).toString(),
-                  type: 'bot',
-                  message: `Perfect! I'm now acting as ${crmData.actingAs} and successfully retrieved their CRM data:\n\n**Contact Information:**\n- Name: ${crmData.contact?.firstName} ${crmData.contact?.lastName}\n- Email: ${crmData.contact?.email}\n- Company: ${crmData.contact?.company}\n- Status: ${crmData.contact?.status}\n\nDo you need to update any of this information?`,
-                  timestamp: new Date(),
-                };
-                setMessages(prev => [...prev, botMessage]);
-              }
-            }, 2000);
+              setMessages(prev => [...prev, successMessage]);
+            } else {
+              const errorMessage: ChatMessage = {
+                id: (Date.now() + 2).toString(),
+                type: 'bot',
+                message: `❌ Failed to retrieve CRM data. Please check the access token and try again.`,
+                timestamp: new Date(),
+              };
+              setMessages(prev => [...prev, errorMessage]);
+            }
           }
         } catch (error) {
           console.error('Retry failed:', error);
@@ -208,37 +207,108 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           setMessages(prev => [...prev, errorMessage]);
         }
         
-      } else if (crmData && (lowerInput.includes('update') || lowerInput.includes('modify') || lowerInput.includes('change'))) {
-        // User wants to update data - trigger push notification
+      } else if (crmData && (lowerInput.includes('update') || lowerInput.includes('modify') || lowerInput.includes('change') || lowerInput.includes('yes'))) {
+        // User wants to update data - trigger step-up authentication with push notification
         const botMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'bot',
-          message: `To update CRM data for ${actingAsUser}, I need to send a push notification for approval. I'll request write access and send a push notification to ${actingAsUser} for consent.`,
+          message: `To update CRM data for ${actingAsUser}, I need elevated write permissions. I'm sending a push notification to ${actingAsUser} for step-up authentication consent...`,
           timestamp: new Date(),
-          action: 'request_write'
         };
         setMessages(prev => [...prev, botMessage]);
         
-        // Send push notification and request write access
+        // Send push notification for step-up authentication
         try {
-          const response = await fetch(`/api/workflow/${sessionId}/request-write-access`, {
+          const response = await fetch(`/api/workflow/${sessionId}/send-push-notification`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ targetUser: actingAsUser }),
           });
-          
+
           if (response.ok) {
-            const followUpMessage: ChatMessage = {
+            const pushData = await response.json();
+            const successMessage: ChatMessage = {
               id: (Date.now() + 2).toString(),
               type: 'bot',
-              message: `Push notification sent to ${actingAsUser}! Once they approve on their Okta Verify app, I'll have write access to update their CRM data. Click "Simulate Push Approval" when ready.`,
+              message: `✅ Push notification sent to ${actingAsUser}! Please check your Okta Verify app and approve the request to enable write access to CRM data.`,
               timestamp: new Date(),
-              action: 'pending_push'
             };
-            setMessages(prev => [...prev, followUpMessage]);
+            setMessages(prev => [...prev, successMessage]);
+            
+            // Add follow-up instructions
+            setTimeout(() => {
+              const followUpMessage: ChatMessage = {
+                id: (Date.now() + 3).toString(),
+                type: 'bot',
+                message: `Once you approve the push notification, I'll be able to update the CRM data with write permissions. The write access token will be automatically retrieved upon approval.`,
+                timestamp: new Date(),
+              };
+              setMessages(prev => [...prev, followUpMessage]);
+            }, 2000);
+          } else {
+            const errorMessage: ChatMessage = {
+              id: (Date.now() + 2).toString(),
+              type: 'bot',
+              message: `❌ Failed to send push notification. Please try again or contact your administrator.`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, errorMessage]);
           }
         } catch (error) {
-          console.error('Write access request failed:', error);
+          console.error('Error sending push notification:', error);
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 2).toString(),
+            type: 'bot',
+            message: `❌ Error sending push notification: ${error.message}`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        }
+        
+      } else if (lowerInput.includes('approve') || lowerInput.includes('approved')) {
+        // User indicates they approved the push - get write access
+        const botMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          type: 'bot',
+          message: `Great! Push notification approved. Now obtaining elevated write access token and updating CRM data...`,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, botMessage]);
+        
+        // Simulate write access approval and CRM update
+        try {
+          const writeResponse = await fetch(`/api/workflow/${sessionId}/simulate-push-approval`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          
+          if (writeResponse.ok) {
+            const writeData = await writeResponse.json();
+            const successMessage: ChatMessage = {
+              id: (Date.now() + 2).toString(),
+              type: 'bot',
+              message: `✅ Write access approved! I've successfully updated ${actingAsUser}'s CRM record with elevated permissions.\n\nUpdated contact status to: Premium Customer\nWrite token used: ${writeData.writeToken}\n\nThe Zero Trust workflow is now complete!`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, successMessage]);
+          } else {
+            const errorMessage: ChatMessage = {
+              id: (Date.now() + 2).toString(),
+              type: 'bot',
+              message: `❌ Failed to obtain write access. Please try again.`,
+              timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, errorMessage]);
+          }
+        } catch (error) {
+          console.error('Write access approval failed:', error);
+          const errorMessage: ChatMessage = {
+            id: (Date.now() + 2).toString(),
+            type: 'bot',
+            message: `❌ Error during write access approval: ${error.message}`,
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, errorMessage]);
         }
         
       } else if (lowerInput.includes('simulate') && lowerInput.includes('push')) {

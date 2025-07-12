@@ -709,5 +709,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get elevated token with PAM secret - streamlined version for fixed workflow
+  app.post('/api/workflow/:sessionId/get-elevated-token', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { targetUser, requestedScope } = req.body;
+      
+      console.log(`Getting elevated token for session ${sessionId}, user: ${targetUser}, scope: ${requestedScope}`);
+      
+      // Get elevated token using PAM service
+      const accessToken = await pamService.getElevatedToken([requestedScope], targetUser);
+      
+      // Store the token
+      await storage.createToken({
+        sessionId,
+        tokenType: 'elevated_access',
+        tokenValue: accessToken,
+        scopes: requestedScope,
+        actAs: targetUser,
+        expiresAt: new Date(Date.now() + 3600000) // 1 hour
+      });
+      
+      res.json({ 
+        success: true, 
+        accessToken,
+        actingAs: targetUser,
+        scope: requestedScope
+      });
+    } catch (error) {
+      console.error('Error getting elevated token:', error);
+      res.status(500).json({ error: 'Failed to get elevated token' });
+    }
+  });
+
+  // Access CRM data with elevated token - streamlined version for fixed workflow  
+  app.post('/api/workflow/:sessionId/access-crm', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { targetUser, accessToken } = req.body;
+      
+      console.log(`Accessing CRM data for session ${sessionId}, user: ${targetUser}`);
+      
+      // Use CRM service to get contact data
+      const contactData = await crmService.getContact('contact-123', targetUser, accessToken);
+      
+      if (!contactData) {
+        return res.status(404).json({ error: 'Contact not found' });
+      }
+      
+      res.json(contactData);
+    } catch (error) {
+      console.error('Error accessing CRM data:', error);
+      res.status(500).json({ error: 'Failed to access CRM data' });
+    }
+  });
+
+  // Send push notification for step-up authentication
+  app.post('/api/workflow/:sessionId/send-push-notification', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { targetUser } = req.body;
+      
+      console.log(`Sending push notification for session ${sessionId}, user: ${targetUser}`);
+      
+      // Use Brandon's actual Okta user ID and factor ID from your curl example
+      const oktaUserId = '00usgiat1bZOUk7Pq697'; // Brandon's Okta user ID  
+      const factorId = 'opft473jgukmcdFGI697'; // Push factor ID
+      
+      // Send push notification using Okta Factors API
+      const pushResult = await oktaService.sendVerifyPush(oktaUserId, 'AI Agent requesting write access to CRM data');
+      
+      res.json({ 
+        success: true, 
+        message: 'Push notification sent successfully',
+        pushResult
+      });
+    } catch (error) {
+      console.error('Error sending push notification:', error);
+      res.status(500).json({ error: 'Failed to send push notification' });
+    }
+  });
+
   return httpServer;
 }

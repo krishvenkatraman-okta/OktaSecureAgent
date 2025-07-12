@@ -1,0 +1,144 @@
+2025-07-11 23:43:35.92
+597a480c
+User
+},
+2025-07-11 23:43:35.92
+597a480c
+User
+response: {
+2025-07-11 23:43:35.92
+597a480c
+User
+status: 400,
+2025-07-11 23:43:35.92
+597a480c
+User
+statusText: 'Bad Request',
+2025-07-11 23:43:35.92
+597a480c
+User
+headers: Object [AxiosHeaders] {
+2025-07-11 23:43:35.92
+597a480c
+User
+date: 'Sat, 12 Jul 2025 06:43:35 GMT',
+2025-07-11 23:43:35.92
+597a480c
+User
+'content-type': 'application/json',
+2025-07-11 23:43:35.92
+597a480c
+User
+'transfer-encoding': 'chunked',
+2025-07-11 23:43:35.92
+597a480c
+User
+connection: 'keep-alive',
+2025-07-11 23:43:35.92
+597a480c
+User
+server: 'nginx',
+2025-07-11 23:43:35.92
+597a480c
+User
+'x-okta-request-id': '5825f88fb1f08da57978184aa8e0dfd6',
+2025-07-11 23:43:35.92
+597a480c
+User
+'accept-ch': 'Sec-CH-UA-Platform-Version',
+2025-07-11 23:43:35.92
+597a480c
+User
+'x-xss-protection': '0',
+2025-07-11 23:43:35.92
+597a480c
+User
+p3p: 'CP="HONK"',
+2025-07-11 23:43:35.92
+597a480c
+User
+'set-cookie': [Array],
+2025-07-11 23:43:35.92
+597a480c
+User
+'content-security-policy': "default-src 'self' fcxdemo.okta.com *.oktacdn.com; connect-src 'self' fcxdemo.okta.com fcxdemo-admin.okta.com *.oktacdn.com *.mixpanel.com *.mapbox.com fcxdemo.kerberos.okta.com fcxdemo.mtls.okta.com *.authenticatorlocalprod.com:8769 http://localhost:8769 http://127.0.0.1:8769 *.authenticatorlocalprod.com:65111 http://localhost:65111 http://127.0.0.1:65111 *.authenticatorlocalprod.com:65121 http://localhost:65121 http://127.0.0.1:65121 *.authenticatorlocalprod.com:65131 http://localhost:65131 http://127.0.0.1:65131 *.authenticatorlocalprod.com:65141 http://localhost:65141 http://127.0.0.1:65141 *.authenticatorlocalprod.com:65151 http://localhost:65151 http://127.0.0.1:65151 https://oinmanager.okta.com data:; script-src 'unsafe-inline' 'unsafe-eval' 'self' 'report-sample' fcxdemo.okta.com *.oktacdn.com; style-src 'unsafe-inline' 'self' 'report-sample' fcxdemo.okta.com *.oktacdn.com; frame-src 'self' fcxdemo.okta.com fcxdemo-admin.okta.com login.okta.com *.vidyard.com com-okta-authenticator:; img-src 'self' fcxdemo.okta.com *.oktacdn.com *.tiles.mapbox.com *.mapbox.com *.vidyard.com data: blob:; font-src 'self' fcxdemo.okta.com data: *.oktacdn.com fonts.gstatic.com; frame-ancestors 'self'",
+2025-07-11 23:43:35.92
+597a480c
+User
+'x-rate-limit-remaining': '299',
+2025-07-11 23:43:35.92
+597a480c
+User
+'x-rate-limit-reset': '1752302675',
+2025-07-11 23:43:35.92
+597a480c
+User
+'cache-control': 'no-cache, no-store',
+2025-07-11 23:43:35.92
+597a480c
+User
+pragma: 'no-cache',
+2025-07-11 23:43:35.92
+597a480c
+User
+'referrer-policy': 'strict-origin-when-cross-origin',
+2025-07-11 23:43:35.92
+597a480c
+User
+transformResponse: [Array],
+2025-07-11 23:43:35.92
+597a480c
+User
+timeout: 0,
+2025-07-11 23:43:35.92
+597a480c
+User
+xsrfHeaderName: 'X-XSRF-TOKEN',
+2025-07-11 23:43:35.92
+597a480c
+User
+env: [Object],
+2025-07-11 23:43:35.92
+597a480c
+User
+url: 'https://fcxdemo.okta.com/api/v1/users/00usgiat1bZOUk7Pq697/factors/opft473jgukmcdFGI697/verify',
+2025-07-11 23:43:35.92
+597a480c
+User
+data: '{"factorResult":"WAITING","expiresAt":"2025-07-12T06:48:35.586Z","profile":{"credentialId":"brandon.stark@acme.com","deviceType":"SmartPhone_IPhone","keys":[{"kty":"EC","use":"sig","kid":"default","jwkType":"proofOfPossession","x":"PhIlcreQ6gEgMJJOstoPyACmeItALOKIzoHdPQ","y":"2iDUt1jEHvy_G1DSt4tuFFaVJM_G06AqtXtVAHJTEsw","crv":"P-256"}]}}',
+2025-07-11 23:43:35.92
+597a480c
+User
+allowAbsoluteUrls: true
+2025-07-11 23:43:35.92
+597a480c
+User
+_maxListeners: undefined,
+2025-07-11 23:43:35.92
+597a480c
+User
+outputData: [],
+2025-07-11 23:43:35.92
+597a480c
+User
+chunkedEncoding: false,
+2025-07-11 23:43:35.92
+597a480c
+User
+_removedContLen: false,
+2025-07-11 23:43:35.92
+597a480c
+User
+finished: true,
+2025-07-11 23:43:35.92
+597a480c
+User
+_closed: true,
+2025-07-11 23:43:35.92
+597a480c
+User
+socket: [TLSSocket],
+2025-07-11 23:43:35.92
+597a480c
+User
+'Authorization: SSWS 00Qb8QieXMZXgN3lyFXprLFsOJAAIuBpXamwTOOCcU\r\n' +

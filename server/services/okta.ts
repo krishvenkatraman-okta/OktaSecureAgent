@@ -101,27 +101,10 @@ export class OktaService {
       console.log('FactorId parameter:', factorId);
       console.log('Domain config:', this.config.domain);
       
+      // For push factors, send empty body to initiate challenge
       const response = await axios.post(
         url,
-        {
-          factorResult: 'WAITING',
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(), // 5 minutes from now
-          profile: {
-            credentialId: 'brandon.stark@acme.com',
-            deviceType: 'SmartPhone_IPhone',
-            keys: [
-              {
-                kty: 'EC',
-                use: 'sig',
-                kid: 'default',
-                jwkType: 'proofOfPossession',
-                x: 'PhIlcreQ6gEgMJJOstoPyACmeItALOKIzoHdPQ',
-                y: '2iDUt1jEHvy_G1DSt4tuFFaVJM_G06AqtXtVAHJTEsw',
-                crv: 'P-256',
-              },
-            ],
-          },
-        },
+        {}, // Empty body for push challenge
         {
           headers: {
             'Authorization': `SSWS ${this.config.apiToken}`,

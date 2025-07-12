@@ -143,6 +143,9 @@ Required environment variables for production deployment:
 - **2025-01-12**: CRITICAL FIX: Fixed OIDC redirect URI to use custom domain when accessing via https://agent.kriyahub.com
 - **2025-01-12**: ENHANCEMENT: Added detailed PAM secret vault messaging in chat interface for better user experience
 - **2025-01-12**: FEATURE: Implemented push notification polling mechanism with transaction ID tracking and automatic workflow progression
+- **2025-01-12**: CRITICAL FIX: Fixed push notification API to use empty body {} for challenge initiation (was causing 400 "request body was not well-formed" error)
+- **2025-01-12**: CRITICAL FIX: Fixed "Welcome User Profile" timeline step completion by forcing page refresh after step advancement
+- **2025-01-12**: SECURITY: Custom domain https://agent.kriyahub.com may show certificate warnings in some browsers - this is expected for demo environments
 - **2025-01-11**: Implemented PKCE (Proof Key for Code Exchange) flow for Okta authentication compliance
 - **2025-01-11**: Fixed authentication redirect flow with proper PKCE code challenge/verifier
 - **2025-01-11**: Implemented proper PAM secret retrieval with public key parameter in request body per API documentation

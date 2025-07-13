@@ -1,15 +1,20 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "client/dist",
   "functions": {
-    "api/index.ts": {
-      "memory": 1024,
-      "maxDuration": 30
+    "api/simple.ts": {
+      "runtime": "@vercel/node"
     }
   },
   "routes": [
     {
+      "src": "/api/simple",
+      "dest": "/api/simple"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/api/index.ts"
+      "dest": "/client/dist/index.html"
     }
   ]
 }

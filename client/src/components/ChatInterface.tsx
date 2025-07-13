@@ -88,7 +88,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
 
   // Initialize welcome message and auto-check app access after authentication
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && currentStep <= 2) {
       // Extract name from ID token for personalized welcome and update step 2
       fetch(`/api/workflow/${sessionId}/tokens`)
         .then(res => res.json())
@@ -143,9 +143,9 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             }, 100);
           });
           
-          // Only add welcome message if chat history is empty
+          // Only add welcome message if chat history is empty and we're at step 1-2
           const currentMessages = document.querySelectorAll('.chat-message');
-          if (currentMessages.length === 0) {
+          if (currentMessages.length === 0 && currentStep <= 2) {
             const welcomeMessage: ChatMessage = {
               id: '1',
               type: 'bot',
@@ -155,10 +155,12 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             addMessage(welcomeMessage);
           }
           
-          // Automatically check app access after authentication
-          setTimeout(() => {
-            checkAppAccess();
-          }, 2000);
+          // Automatically check app access after authentication (only if at step 1-2)
+          if (currentStep <= 2) {
+            setTimeout(() => {
+              checkAppAccess();
+            }, 2000);
+          }
         })
         .catch(error => {
           console.error('Error fetching tokens:', error);
@@ -170,10 +172,12 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           };
           addMessage(fallbackWelcomeMessage);
           
-          // Still proceed with app access check even if name extraction fails
-          setTimeout(() => {
-            checkAppAccess();
-          }, 2000);
+          // Still proceed with app access check even if name extraction fails (only if at step 1-2)
+          if (currentStep <= 2) {
+            setTimeout(() => {
+              checkAppAccess();
+            }, 2000);
+          }
         });
     } else {
       const initialMessage: ChatMessage = {

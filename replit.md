@@ -204,5 +204,7 @@ Required environment variables for production deployment:
 - **2025-07-13**: PERSISTENCE: Replaced all remaining setMessages calls with addMessage for complete chat message persistence across all workflow states
 - **2025-07-13**: AUTHENTICATION: Enhanced welcome message extraction to properly display "Welcome Okta Admin!" using user's actual name from Okta ID token claims
 - **2025-07-13**: UX IMPROVEMENT: Complete chat persistence with personalized authentication greeting and interactive workflow progression
+- **2025-07-13**: CRITICAL FIX: Prevented authentication flow from re-triggering after IGA approval by adding currentStep <= 2 condition to authentication useEffect
+- **2025-07-13**: WORKFLOW FIX: Welcome message no longer appears again after IGA approval - authentication flow now only runs during initial login steps
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

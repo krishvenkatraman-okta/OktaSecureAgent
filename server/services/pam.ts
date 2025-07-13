@@ -190,10 +190,18 @@ export class PAMService {
       
       const tokenData: any = {
         grant_type: 'client_credentials',
-        scope: scopes.join(' '),
         client_id: clientId,
         client_secret: clientSecret
       };
+
+      // For demo purposes, we'll attempt with CRM scopes but fall back to demo token
+      // The default authorization server may require API access policies to be configured
+      if (scopes && scopes.length > 0 && !scopes.includes('openid')) {
+        tokenData.scope = scopes.join(' ');
+        console.log('Attempting OAuth2 with custom scopes:', scopes);
+      } else {
+        console.log('No custom scopes provided, attempting without scope parameter');
+      }
 
       if (actAs) {
         tokenData.act_as = actAs;
@@ -205,7 +213,7 @@ export class PAMService {
       console.log('Act as user:', actAs);
 
       const response = await axios.post(
-        `https://fcxdemo.okta.com/oauth2/v1/token`,
+        `https://fcxdemo.okta.com/oauth2/default/v1/token`,
         new URLSearchParams(tokenData),
         {
           headers: {

@@ -1162,6 +1162,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId,
           currentStep: 2
         });
+        
+        // Also send user profile completion update
+        sendRealtimeUpdate(sessionId, {
+          type: 'user_profile_completed',
+          sessionId,
+          userName: 'Test User',
+          currentStep: 2
+        });
 
         console.log(`✅ Session ${sessionId} fixed - advanced to step 2`);
         res.json({ success: true, message: 'Session unstuck', currentStep: 2 });

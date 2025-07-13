@@ -1003,6 +1003,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete PAM step (Step 3 -> Step 4)
+  app.post('/api/workflow/:sessionId/complete-pam', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { pamCompleted } = req.body;
+      
+      console.log(`🔄 Completing PAM step for session ${sessionId}`);
+      
+      // Update workflow to step 4 (PAM completed, moving to CRM step)
+      const updatedSession = await storage.updateWorkflowSession(sessionId, {
+        currentStep: 4,
+        metadata: { pamCompleted, pamCompletedAt: new Date().toISOString() } as any,
+      });
+      
+      if (!updatedSession) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'pam_completed',
+        eventData: { pamCompleted, stepCompleted: 3 } as any,
+        userId: updatedSession.userId,
+      });
+      
+      // Send real-time update
+      sendRealtimeUpdate(sessionId, {
+        type: 'pam_completed',
+        step: 4, // Now at step 4, so step 3 (PAM) is completed
+        pamCompleted
+      });
+      
+      console.log('✅ PAM step completed - workflow moved to step 4');
+      res.json({ success: true, currentStep: 4, pamCompleted });
+    } catch (error) {
+      console.error('❌ Error completing PAM step:', error);
+      res.status(500).json({ error: 'Failed to complete PAM step' });
+    }
+  });
+
+  // Complete entire workflow (Step 4 completed - all green)
+  app.post('/api/workflow/:sessionId/complete-workflow', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { completed } = req.body;
+      
+      console.log(`🎉 Completing entire workflow for session ${sessionId}`);
+      
+      // Update workflow to step 5 (all steps completed, everything green)
+      const updatedSession = await storage.updateWorkflowSession(sessionId, {
+        currentStep: 5, // Beyond step 4, so all steps show as completed
+        metadata: { workflowCompleted: completed, completedAt: new Date().toISOString() } as any,
+      });
+      
+      if (!updatedSession) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'workflow_completed',
+        eventData: { completed, allStepsCompleted: true } as any,
+        userId: updatedSession.userId,
+      });
+      
+      // Send real-time update
+      sendRealtimeUpdate(sessionId, {
+        type: 'workflow_completed',
+        step: 5, // Step 5 means all 4 steps (1-4) are completed
+        completed
+      });
+      
+      console.log('✅ Complete workflow finished - all steps showing as completed');
+      res.json({ success: true, currentStep: 5, completed });
+    } catch (error) {
+      console.error('❌ Error completing workflow:', error);
+      res.status(500).json({ error: 'Failed to complete workflow' });
+    }
+  });
+
   // Poll push notification status endpoint
   app.post('/api/workflow/:sessionId/poll-push', async (req, res) => {
     try {

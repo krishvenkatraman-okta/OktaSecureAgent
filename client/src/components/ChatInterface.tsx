@@ -737,6 +737,17 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           if (pamResponse.ok) {
             const pamData = await pamResponse.json();
             
+            // Update workflow to step 4 (PAM completed, moving to CRM step)
+            try {
+              await fetch(`/api/workflow/${sessionId}/complete-pam`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pamCompleted: true }),
+              });
+            } catch (error) {
+              console.error('Error updating PAM completion:', error);
+            }
+            
             // Step 2: Access CRM data using the elevated token
             const crmResponse = await fetch(`/api/workflow/${sessionId}/access-crm`, {
               method: 'POST',
@@ -750,6 +761,17 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             if (crmResponse.ok) {
               const crmData = await crmResponse.json();
               setCrmData(crmData);
+              
+              // Update workflow to final step (all steps completed)
+              try {
+                await fetch(`/api/workflow/${sessionId}/complete-workflow`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ completed: true }),
+                });
+              } catch (error) {
+                console.error('Error updating workflow completion:', error);
+              }
               
               // Extract contact data from the API response structure
               const contactData = crmData.contactData;

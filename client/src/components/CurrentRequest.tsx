@@ -10,7 +10,14 @@ interface CurrentRequestProps {
 export function CurrentRequest({ accessRequests, currentStep }: CurrentRequestProps) {
   const pendingRequest = accessRequests.find(req => req.status === 'pending');
   
-  if (!pendingRequest && currentStep < 3) {
+  // Hide if no pending request and we're not in the IGA phase (step 2)
+  // Or if we've completed all steps (step 4+)
+  if ((!pendingRequest && currentStep < 2) || currentStep >= 4) {
+    return null;
+  }
+  
+  // Hide if we're past the IGA approval phase (step 3+) and no pending requests
+  if (!pendingRequest && currentStep >= 3) {
     return null;
   }
 

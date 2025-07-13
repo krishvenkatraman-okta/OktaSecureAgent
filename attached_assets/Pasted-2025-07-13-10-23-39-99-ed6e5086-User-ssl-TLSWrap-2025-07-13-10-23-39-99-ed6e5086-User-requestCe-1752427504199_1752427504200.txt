@@ -1,0 +1,140 @@
+2025-07-13 10:23:39.99
+ed6e5086
+User
+ssl: [TLSWrap],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_requestCert: true,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_rejectUnauthorized: true,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+timeout: 5000,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+parser: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_httpMessage: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+autoSelectFamilyAttemptedAddresses: [Array],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(alpncallback)]: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(res)]: [TLSWrap],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(verified)]: true,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(pendingSession)]: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(async_id_symbol)]: -1,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kHandle)]: [TLSWrap],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(lastWriteQueueSize)]: 0,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(timeout)]: Timeout {
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_idleTimeout: 5000,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_idlePrev: [TimersList],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_idleNext: [Timeout],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_idleStart: 223218,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_onTimeout: [Function: bound ],
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_timerArgs: undefined,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_repeat: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+_destroyed: false,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(refed)]: false,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kHasPrimitive)]: false,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(asyncId)]: 1635,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(triggerId)]: 1633
+2025-07-13 10:23:39.99
+ed6e5086
+User
+},
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kBuffer)]: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kBufferCb)]: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kBufferGen)]: null,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(shapeMode)]: true,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kCapture)]: false,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kSetNoDelay)]: false,
+2025-07-13 10:23:39.99
+ed6e5086
+User
+[Symbol(kSetKeepAlive)]: true,

@@ -922,6 +922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true, 
+        message: `✅ Received access token to act as user ${targetUser}`,
         accessToken,
         actingAs: targetUser,
         scope: requestedScope
@@ -938,7 +939,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { targetUser, accessToken } = req.body;
       
-      console.log(`Accessing CRM data for session ${sessionId}, user: ${targetUser}`);
+      console.log(`🔍 Accessing CRM data for session ${sessionId}, user: ${targetUser}`);
+      console.log('Using elevated token with act_as delegation');
       
       // Use CRM service to get contact data (use existing contact ID from mock data)
       const contactData = await crmService.getContact('contact_001', targetUser, accessToken);
@@ -947,7 +949,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Contact not found' });
       }
       
-      res.json(contactData);
+      console.log('✅ Successfully retrieved CRM contact data');
+      res.json({
+        message: `Successfully retrieved details from mock CRM API acting as ${targetUser}`,
+        contactData
+      });
     } catch (error) {
       console.error('Error accessing CRM data:', error);
       res.status(500).json({ error: 'Failed to access CRM data' });

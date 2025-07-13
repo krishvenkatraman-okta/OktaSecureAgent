@@ -143,12 +143,17 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             }, 100);
           });
           
-          setMessages([{
-            id: '1',
-            type: 'bot',
-            message: `Welcome ${userName}! You've been successfully authenticated via Okta OIDC. I'll now automatically check your CRM app access...`,
-            timestamp: new Date(),
-          }]);
+          // Only add welcome message if chat history is empty
+          const currentMessages = document.querySelectorAll('.chat-message');
+          if (currentMessages.length === 0) {
+            const welcomeMessage: ChatMessage = {
+              id: '1',
+              type: 'bot',
+              message: `Welcome ${userName}! You've been successfully authenticated via Okta OIDC. I'll now automatically check your CRM app access...`,
+              timestamp: new Date(),
+            };
+            addMessage(welcomeMessage);
+          }
           
           // Automatically check app access after authentication
           setTimeout(() => {
@@ -519,7 +524,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           timestamp: new Date(),
           action: 'pending_iga_approval'
         };
-        setMessages(prev => [...prev, pendingMessage]);
+        addMessage(pendingMessage);
         setPendingAccessRequest(igaData);
       } else {
         const errorData = await igaResponse.json();
@@ -529,7 +534,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: `❌ Failed to submit IGA request: ${errorData.error}`,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, errorMessage]);
+        addMessage(errorMessage);
       }
     } catch (error) {
       console.error('IGA request error:', error);
@@ -539,7 +544,52 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         message: `❌ Error submitting IGA request. Please try again.`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      addMessage(errorMessage);
+    }
+  };
+
+  const sendPushNotificationAndContinue = async (targetUser: string) => {
+    try {
+      const response = await fetch(`/api/workflow/${sessionId}/send-push-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUser }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const pushMessage: ChatMessage = {
+          id: (Date.now() + 4).toString(),
+          type: 'bot',
+          message: `📱 Push notification sent to ${targetUser}! Polling for response...\n\nTransaction ID: ${data.transactionId}`,
+          timestamp: new Date(),
+          action: 'pending_push_approval'
+        };
+        addMessage(pushMessage);
+        setActingAsUser(targetUser);
+        
+        // Start polling if poll URL is available
+        if (data.pollUrl) {
+          pollPushNotification(data.pollUrl, targetUser);
+        }
+      } else {
+        const errorMessage: ChatMessage = {
+          id: (Date.now() + 4).toString(),
+          type: 'bot',
+          message: `❌ Failed to send push notification. Please try again.`,
+          timestamp: new Date(),
+        };
+        addMessage(errorMessage);
+      }
+    } catch (error) {
+      console.error('Push notification error:', error);
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 4).toString(),
+        type: 'bot',
+        message: `❌ Error sending push notification: ${error.message}`,
+        timestamp: new Date(),
+      };
+      addMessage(errorMessage);
     }
   };
 
@@ -708,10 +758,25 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           const successMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
             type: 'bot',
-            message: `🎉 Perfect! You now have CRM app access. Please specify which user's data you need (e.g., "brandon.stark@acme.com").`,
+            message: `🎉 Perfect! You now have CRM app access. I'll now request access to Brandon Stark's CRM data...`,
             timestamp: new Date(),
           };
           addMessage(successMessage);
+          
+          // Automatically request access to Brandon Stark's data
+          setTimeout(() => {
+            const targetUser = 'brandon.stark@acme.com';
+            const autoRequestMessage: ChatMessage = {
+              id: (Date.now() + 3).toString(),
+              type: 'bot',
+              message: `Sending push notification to ${targetUser} for consent to access their CRM data...`,
+              timestamp: new Date(),
+            };
+            addMessage(autoRequestMessage);
+            
+            // Proceed with push notification flow
+            sendPushNotificationAndContinue(targetUser);
+          }, 1500);
         }, 1000);
         
       } else if (hasGroupAccess && lowerInput.includes('@')) {
@@ -741,7 +806,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               timestamp: new Date(),
               action: 'pending_push_approval'
             };
-            setMessages(prev => [...prev, pushMessage]);
+            addMessage(pushMessage);
             setActingAsUser(targetUser);
             
             // Start polling if poll URL is available
@@ -755,7 +820,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               message: `❌ Failed to send push notification. Please try again.`,
               timestamp: new Date(),
             };
-            setMessages(prev => [...prev, errorMessage]);
+            addMessage(errorMessage);
           }
         } catch (error) {
           console.error('Push notification error:', error);
@@ -765,7 +830,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             message: `❌ Error sending push notification: ${error.message}`,
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, errorMessage]);
+          addMessage(errorMessage);
         }
         
       } else if (lowerInput.includes('simulate') && lowerInput.includes('push') && lowerInput.includes('approval')) {
@@ -776,7 +841,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: `✅ Push notification approved! Now getting PAM client credentials with act_as claims and accessing CRM data...`,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, botMessage]);
+        addMessage(botMessage);
         
         try {
           // Step 1: Get PAM credentials with act_as claims

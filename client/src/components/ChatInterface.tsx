@@ -48,6 +48,14 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
     }).catch(error => {
       console.error('Error saving message to backend:', error);
     });
+    
+    // Auto-scroll to bottom after message is added
+    setTimeout(() => {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 100);
   };
 
   // Load chat history on component mount
@@ -980,8 +988,8 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   };
 
   return (
-    <Card className="h-[600px] flex flex-col">
-      <CardHeader>
+    <Card className="h-[80vh] flex flex-col">
+      <CardHeader className="flex-shrink-0">
         <CardTitle className="flex items-center gap-2">
           <Bot className="h-5 w-5" />
           AI Agent Chat
@@ -989,9 +997,9 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="flex-1 flex flex-col gap-4">
+      <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-2 min-h-0 messages-container">
           {messages.map((message) => (
             <div
               key={message.id}
@@ -1063,7 +1071,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         </div>
         
         {/* Input */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}

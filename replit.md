@@ -206,5 +206,7 @@ Required environment variables for production deployment:
 - **2025-07-13**: UX IMPROVEMENT: Complete chat persistence with personalized authentication greeting and interactive workflow progression
 - **2025-07-13**: CRITICAL FIX: Prevented authentication flow from re-triggering after IGA approval by adding currentStep <= 2 condition to authentication useEffect
 - **2025-07-13**: WORKFLOW FIX: Welcome message no longer appears again after IGA approval - authentication flow now only runs during initial login steps
+- **2025-07-13**: UX IMPROVEMENT: Fixed chat interface scrolling issues - added proper overflow handling, auto-scroll to bottom, and increased height to 80vh for better visibility
+- **2025-07-13**: LAYOUT FIX: Enhanced chat container with flex-shrink-0 for input area and messages-container class for smooth scrolling behavior
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

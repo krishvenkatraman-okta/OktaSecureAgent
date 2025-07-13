@@ -24,6 +24,15 @@ export function useWorkflowState(sessionId: string) {
     refetchIntervalInBackground: true,
     staleTime: 0, // Always consider data stale for immediate updates
     gcTime: 0, // Don't cache stale data
+    retry: (failureCount, error: any) => {
+      // If session not found (404), force page refresh to get new session
+      if (error?.response?.status === 404 || error?.status === 404) {
+        console.log('Session expired or not found - refreshing page for new session');
+        setTimeout(() => window.location.reload(), 1000);
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const initWorkflowMutation = useMutation({

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Session Fix</title>
+</head>
+<body>
+    <h1>Session Recovery</h1>
+    <p>Please refresh the page to get a new session. The old session has expired.</p>
+    <button onclick="window.location.reload()">Refresh Page</button>
+    <script>
+        // Auto-refresh after 3 seconds
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
+    </script>
+</body>
+</html>

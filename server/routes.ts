@@ -1127,7 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fix stuck sessions at step 1 by advancing to step 2
+  // Fix stuck sessions by advancing to appropriate step
   app.post('/api/workflow/:sessionId/fix-stuck-session', async (req, res) => {
     try {
       const { sessionId } = req.params;
@@ -1139,10 +1139,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Session not found' });
       }
 
-      // Force advance to step 2 if stuck at step 1
+      let targetStep = session.currentStep;
+      let message = 'Session already at correct step';
+
+      // Force advance from step 1 to step 3 (complete user profile)
       if (session.currentStep === 1) {
+        targetStep = 3;
         await storage.updateWorkflowSession(sessionId, {
-          currentStep: 2,
+          currentStep: 3,
           metadata: {
             ...session.metadata,
             userProfileCompleted: true,
@@ -1153,29 +1157,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createAuditLog({
           sessionId,
           eventType: 'session_unstuck',
-          eventData: { fromStep: 1, toStep: 2 } as Record<string, any>,
+          eventData: { fromStep: 1, toStep: 3 } as Record<string, any>,
           userId: session.userId,
         });
 
         sendRealtimeUpdate(sessionId, {
           type: 'session_fixed',
           sessionId,
-          currentStep: 2
+          currentStep: 3
         });
         
-        // Also send user profile completion update
         sendRealtimeUpdate(sessionId, {
           type: 'user_profile_completed',
           sessionId,
           userName: 'Test User',
-          currentStep: 2
+          currentStep: 3
         });
 
-        console.log(`✅ Session ${sessionId} fixed - advanced to step 2`);
-        res.json({ success: true, message: 'Session unstuck', currentStep: 2 });
-      } else {
-        res.json({ success: false, message: 'Session not stuck at step 1' });
+        message = 'Session unstuck - advanced to step 3';
+        console.log(`✅ Session ${sessionId} fixed - advanced from step 1 to step 3`);
       }
+
+      res.json({ success: true, message, currentStep: targetStep });
     } catch (error) {
       console.error('Error fixing stuck session:', error);
       res.status(500).json({ error: 'Failed to fix stuck session' });

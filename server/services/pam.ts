@@ -251,6 +251,8 @@ demo_key_for_testing_only
       console.log('Requested scopes:', scopes);
       console.log('Act as user:', actAs);
       
+      console.log('DPoP disabled - using standard OAuth2 service app flow');
+
       const response = await axios.post(
         `https://fcxdemo.okta.com/oauth2/v1/token`,
         new URLSearchParams(tokenData),
@@ -287,6 +289,43 @@ demo_key_for_testing_only
           tokenData.act_as = actAs;
         }
 
+        // Create DPoP proof for fallback client secret method too
+        const dPopHeader = {
+          alg: 'RS256',
+          typ: 'dpop+jwt',
+          jwk: {
+            kty: 'RSA',
+            e: 'AQAB',
+            use: 'sig',
+            kid: 'my_key_id',
+            alg: 'RS256',
+            n: 'u0VYW2-76A_lYg5NQihhcPJYYU9-NHbNaO6LFERWnOUbU7l3MJdmCailwSzjO76O-2GdLE-Hn2kx04jWCCPofnQ8xNmFScNo8UQ1dKVq0UkFK-sl-Z0Uu19GiZa2fxSWwg_1g2t-ZpNtKCI279xGBi_hTnupqciUonWe6CIvTv0FfX0LiMqQqjARxPS-6fdBZq8WN9qLGDwpjHK81CoYuzASOezVFYDDyXYzV0X3X_kFVt2sqL5DVN684bEbTsWl91vV-bGmswrlQ0UVUq6t78VdgMrj0RZBD-lFNJcY7CwyugpgLbnm4HEJmCOWJOdjVLj3hFxVVblNJQQ1Z15UXw'
+          }
+        };
+
+        const fallbackPrivateKey = `-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAu0VYW2+76A/lYg5NQihhcPJYYU9+NHbNaO6LFERWnOUbU7l3
+MJdmCailwSzjO76O+2GdLE+Hn2kx04jWCCPofnQ8xNmFScNo8UQ1dKVq0UkFK+sl
++Z0Uu19GiZa2fxSWwg/1g2t+ZpNtKCI279xGBi/hTnupqciUonWe6CIvTv0FfX0L
+iMqQqjARxPS+6fdBZq8WN9qLGDwpjHK81CoYuzASOezVFYDDyXYzV0X3X/kFVt2s
+qL5DVN684bEbTsWl91vV+bGmswrlQ0UVUq6t78VdgMrj0RZBD+lFNJcY7CwyugpgL
+bnm4HEJmCOWJOdjVLj3hFxVVblNJQQ1Z15UXwIDAQABAoIBAQCzF9x3PcQGEwTI
+demo_key_for_testing_only
+-----END RSA PRIVATE KEY-----`;
+
+        const dPopPayload = {
+          jti: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          htm: 'POST',
+          htu: 'https://fcxdemo.okta.com/oauth2/v1/token',
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + 300
+        };
+
+        const dPopProof = jwt.sign(dPopPayload, fallbackPrivateKey, {
+          algorithm: 'RS256',
+          header: dPopHeader
+        });
+
         const response = await axios.post(
           `https://fcxdemo.okta.com/oauth2/v1/token`,
           new URLSearchParams(tokenData),
@@ -294,6 +333,7 @@ demo_key_for_testing_only
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
               'Authorization': `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+
             },
           }
         );

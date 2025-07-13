@@ -31,6 +31,61 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   const [pendingAccessRequest, setPendingAccessRequest] = useState<any>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
+  // Helper function to save a message to backend and add to local state
+  const addMessage = async (message: ChatMessage) => {
+    // Add to local state immediately for UI responsiveness
+    setMessages(prev => [...prev, message]);
+    
+    // Save to backend for persistence (fire and forget)
+    fetch(`/api/workflow/${sessionId}/chat-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messageType: message.type,
+        messageText: message.message,
+        messageAction: message.action || null,
+      }),
+    }).catch(error => {
+      console.error('Error saving message to backend:', error);
+    });
+  };
+
+  // Load chat history on component mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const response = await fetch(`/api/workflow/${sessionId}/chat-messages`);
+        if (response.ok) {
+          const data = await response.json();
+          const loadedMessages = data.messages.map((msg: any) => ({
+            id: msg.id.toString(),
+            type: msg.messageType,
+            message: msg.messageText,
+            timestamp: new Date(msg.createdAt),
+            action: msg.messageAction || undefined,
+          }));
+          setMessages(loadedMessages);
+          console.log('✅ Loaded chat history:', loadedMessages.length, 'messages');
+          
+          // If no messages and authenticated, add welcome message
+          if (loadedMessages.length === 0 && isAuthenticated && currentStep > 1) {
+            const welcomeMessage: ChatMessage = {
+              id: 'welcome-restored',
+              type: 'bot',
+              message: `Welcome back! Your workflow is at step ${currentStep}. All previous steps have been completed.`,
+              timestamp: new Date(),
+            };
+            addMessage(welcomeMessage);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+      }
+    };
+
+    loadChatHistory();
+  }, [sessionId]);
+
   // Initialize welcome message and auto-check app access after authentication
   useEffect(() => {
     if (isAuthenticated) {
@@ -498,7 +553,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    addMessage(userMessage);
     const currentInput = input;
     setInput('');
     setIsProcessing(true);
@@ -846,7 +901,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             'I can help you access CRM data securely. Try asking me to "get CRM data" and I\'ll guide you through the Zero Trust authentication process.',
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, botMessage]);
+        addMessage(botMessage);
       }
       
       setIsProcessing(false);

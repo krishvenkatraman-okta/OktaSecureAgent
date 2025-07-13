@@ -1083,6 +1083,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Store chat message
+  app.post('/api/workflow/:sessionId/chat-message', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { messageType, messageText, messageAction } = req.body;
+      
+      const message = await storage.createChatMessage({
+        sessionId,
+        messageType,
+        messageText,
+        messageAction: messageAction || null,
+      });
+      
+      res.json({ success: true, message });
+    } catch (error) {
+      console.error('Error storing chat message:', error);
+      res.status(500).json({ error: 'Failed to store chat message' });
+    }
+  });
+
+  // Get chat messages for session
+  app.get('/api/workflow/:sessionId/chat-messages', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const messages = await storage.getChatMessagesBySession(sessionId);
+      res.json({ messages });
+    } catch (error) {
+      console.error('Error retrieving chat messages:', error);
+      res.status(500).json({ error: 'Failed to retrieve chat messages' });
+    }
+  });
+
   // Poll push notification status endpoint
   app.post('/api/workflow/:sessionId/poll-push', async (req, res) => {
     try {

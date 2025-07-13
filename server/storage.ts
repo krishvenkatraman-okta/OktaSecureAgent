@@ -4,6 +4,7 @@ import {
   tokenStore,
   auditLogs,
   notifications,
+  chatMessages,
   type WorkflowSession,
   type InsertWorkflowSession,
   type AccessRequest,
@@ -13,7 +14,9 @@ import {
   type AuditLog,
   type InsertAuditLog,
   type Notification,
-  type InsertNotification
+  type InsertNotification,
+  type ChatMessage,
+  type InsertChatMessage
 } from "@shared/schema";
 
 export interface IStorage {
@@ -41,6 +44,10 @@ export interface IStorage {
   // Notifications
   createNotification(notification: InsertNotification): Promise<Notification>;
   getNotificationsBySession(sessionId: string): Promise<Notification[]>;
+  
+  // Chat Messages
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  getChatMessagesBySession(sessionId: string): Promise<ChatMessage[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -49,12 +56,14 @@ export class MemStorage implements IStorage {
   private tokenStore: Map<number, TokenStore> = new Map();
   private auditLogs: Map<number, AuditLog> = new Map();
   private notifications: Map<number, Notification> = new Map();
+  private chatMessages: Map<number, ChatMessage> = new Map();
   
   private workflowSessionId = 1;
   private accessRequestId = 1;
   private tokenId = 1;
   private auditLogId = 1;
   private notificationId = 1;
+  private chatMessageId = 1;
 
   async createWorkflowSession(session: InsertWorkflowSession): Promise<WorkflowSession> {
     const newSession: WorkflowSession = {
@@ -180,6 +189,20 @@ export class MemStorage implements IStorage {
 
   async getNotificationsBySession(sessionId: string): Promise<Notification[]> {
     return Array.from(this.notifications.values()).filter(notif => notif.sessionId === sessionId);
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const newMessage: ChatMessage = {
+      ...message,
+      id: this.chatMessageId++,
+      createdAt: new Date(),
+    };
+    this.chatMessages.set(newMessage.id, newMessage);
+    return newMessage;
+  }
+
+  async getChatMessagesBySession(sessionId: string): Promise<ChatMessage[]> {
+    return Array.from(this.chatMessages.values()).filter(msg => msg.sessionId === sessionId);
   }
 }
 

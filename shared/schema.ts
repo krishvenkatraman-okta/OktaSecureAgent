@@ -59,6 +59,15 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  sessionId: text("session_id").notNull(),
+  messageType: text("message_type").notNull(), // 'user' | 'bot'
+  messageText: text("message_text").notNull(),
+  messageAction: text("message_action"), // for action buttons/states
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertWorkflowSessionSchema = createInsertSchema(workflowSessions).omit({
   id: true,
@@ -87,6 +96,11 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
   createdAt: true,
 });
 
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type WorkflowSession = typeof workflowSessions.$inferSelect;
 export type InsertWorkflowSession = z.infer<typeof insertWorkflowSessionSchema>;
@@ -102,3 +116,6 @@ export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;

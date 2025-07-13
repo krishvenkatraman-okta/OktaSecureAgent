@@ -963,6 +963,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete IGA approval (Step 2 -> Step 3)
+  app.post('/api/workflow/:sessionId/complete-iga-approval', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const { approved } = req.body;
+      
+      console.log(`🔄 Completing IGA approval for session ${sessionId}`);
+      
+      // Update workflow to step 3 (IGA completed, moving to PAM step)
+      const updatedSession = await storage.updateWorkflowSession(sessionId, {
+        currentStep: 3,
+        metadata: { igaApproved: approved, igaCompletedAt: new Date().toISOString() } as any,
+      });
+      
+      if (!updatedSession) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+      
+      await storage.createAuditLog({
+        sessionId,
+        eventType: 'iga_approval_completed',
+        eventData: { approved, stepCompleted: 2 } as any,
+        userId: updatedSession.userId,
+      });
+      
+      // Send real-time update
+      sendRealtimeUpdate(sessionId, {
+        type: 'iga_approval_completed',
+        step: 3, // Now at step 3, so step 2 (IGA) is completed
+        approved
+      });
+      
+      console.log('✅ IGA approval completed - workflow moved to step 3');
+      res.json({ success: true, currentStep: 3, approved });
+    } catch (error) {
+      console.error('❌ Error completing IGA approval:', error);
+      res.status(500).json({ error: 'Failed to complete IGA approval' });
+    }
+  });
+
   // Poll push notification status endpoint
   app.post('/api/workflow/:sessionId/poll-push', async (req, res) => {
     try {

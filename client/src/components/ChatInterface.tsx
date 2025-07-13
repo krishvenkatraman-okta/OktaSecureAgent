@@ -638,6 +638,18 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         // Simulate access granted and proceed to user data request
         setTimeout(async () => {
           setHasGroupAccess(true);
+          
+          // Update workflow step to 3 (IGA completed, moving to PAM step)
+          try {
+            await fetch(`/api/workflow/${sessionId}/complete-iga-approval`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ approved: true }),
+            });
+          } catch (error) {
+            console.error('Error updating IGA completion:', error);
+          }
+          
           const successMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
             type: 'bot',

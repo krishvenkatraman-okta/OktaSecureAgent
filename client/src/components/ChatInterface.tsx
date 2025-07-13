@@ -30,6 +30,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
   const [actingAsUser, setActingAsUser] = useState<string>('');
   const [pendingAccessRequest, setPendingAccessRequest] = useState<any>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [chatHistoryLoaded, setChatHistoryLoaded] = useState(false);
 
   // Helper function to save a message to backend and add to local state
   const addMessage = async (message: ChatMessage) => {
@@ -74,6 +75,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           }));
           setMessages(loadedMessages);
           console.log('✅ Loaded chat history:', loadedMessages.length, 'messages');
+          setChatHistoryLoaded(true);
           
           // If no messages and authenticated, add welcome message
           if (loadedMessages.length === 0 && isAuthenticated && currentStep > 1) {
@@ -88,6 +90,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         }
       } catch (error) {
         console.error('Error loading chat history:', error);
+        setChatHistoryLoaded(true); // Mark as loaded even if error occurred
       }
     };
 
@@ -96,6 +99,9 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
 
   // Initialize welcome message and auto-check app access after authentication
   useEffect(() => {
+    // Wait for chat history to load before initializing messages
+    if (!chatHistoryLoaded) return;
+    
     if (isAuthenticated && currentStep <= 2) {
       // Extract name from ID token for personalized welcome and update step 2
       fetch(`/api/workflow/${sessionId}/tokens`)
@@ -187,7 +193,12 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             }, 2000);
           }
         });
-    } else {
+    }
+  }, [isAuthenticated, currentStep, sessionId, chatHistoryLoaded]);
+
+  // Add initial welcome message for unauthenticated users
+  useEffect(() => {
+    if (chatHistoryLoaded && !isAuthenticated && messages.length === 0) {
       const initialMessage: ChatMessage = {
         id: '1',
         type: 'bot',
@@ -196,7 +207,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       };
       addMessage(initialMessage);
     }
-  }, [isAuthenticated, currentStep, sessionId]);
+  }, [chatHistoryLoaded, isAuthenticated, messages.length]);
 
   // Cleanup polling on component unmount
   useEffect(() => {

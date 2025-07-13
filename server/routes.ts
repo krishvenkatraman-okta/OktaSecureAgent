@@ -940,6 +940,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { targetUser, accessToken } = req.body;
       
       console.log(`🔍 Accessing CRM data for session ${sessionId}, user: ${targetUser}`);
+      console.log(`🔍 Request body:`, { targetUser, accessToken: accessToken?.substring(0, 20) + '...' });
       console.log('Using elevated token with act_as delegation');
       
       // Use CRM service to get contact data (use existing contact ID from mock data)

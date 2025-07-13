@@ -192,6 +192,14 @@ export class CRMService {
   }
 
   private validateTokenActAs(accessToken: string, expectedActAs: string): boolean {
+    console.log(`🔍 CRM validateTokenActAs called with:`, { accessToken: accessToken?.substring(0, 20) + '...', expectedActAs });
+    
+    // Handle undefined or null tokens
+    if (!accessToken) {
+      console.error('❌ Access token is undefined or null');
+      return false;
+    }
+    
     // For demo purposes, accept any demo elevated tokens
     if (accessToken.startsWith('demo_elevated_token_')) {
       console.log('Demo mode: Accepting demo elevated token for CRM access');

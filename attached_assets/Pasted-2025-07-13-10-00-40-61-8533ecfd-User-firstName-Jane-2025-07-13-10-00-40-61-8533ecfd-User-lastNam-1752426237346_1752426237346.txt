@@ -1,0 +1,101 @@
+2025-07-13 10:00:40.61
+8533ecfd
+User
+firstName: 'Jane',
+2025-07-13 10:00:40.61
+8533ecfd
+User
+lastName: 'Smith',
+2025-07-13 10:00:40.61
+8533ecfd
+User
+email: 'jane.smith@techco.com',
+2025-07-13 10:00:40.61
+8533ecfd
+User
+company: 'TechCo Inc',
+2025-07-13 10:00:40.61
+8533ecfd
+User
+phone: '+1-555-0456',
+2025-07-13 10:00:40.61
+8533ecfd
+User
+status: 'Lead',
+2025-07-13 10:00:40.61
+8533ecfd
+User
+lastModified: 2024-01-16T14:22:00.000Z,
+2025-07-13 10:00:40.61
+8533ecfd
+User
+owner: 'brandon.stark@acme.com'
+2025-07-13 10:00:40.61
+8533ecfd
+User
+}
+2025-07-13 10:00:40.61
+8533ecfd
+User
+]
+2025-07-13 10:00:40.61
+8533ecfd
+User
+Error accessing CRM data: TypeError: Cannot read properties of undefined (reading 'startsWith')
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at CRMService.validateTokenActAs (file:///home/runner/workspace/dist/index.js:660:21)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at CRMService.getContact (file:///home/runner/workspace/dist/index.js:617:15)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at file:///home/runner/workspace/dist/index.js:1418:44
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:365:14)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+at param (/home/runner/workspace/node_modules/express/lib/router/index.js:376:14)
+2025-07-13 10:00:40.61
+8533ecfd
+User
+5:00:40 PM [express] POST /api/workflow/wJgEpmLzMZABRKEFxaE44/access-crm 500 in 1ms :: {"error":"Fai…
+2025-07-13 10:00:42.91
+8533ecfd
+User
+5:00:42 PM [express] GET /api/workflow/wJgEpmLzMZABRKEFxaE44 200 in 1ms :: {"session":{"sessionId":"…
+2025-07-13 10:00:43.01
+8533ecfd
+User
+5:00:43 PM [express] GET /api/workflow/wJgEpmLzMZABRKEFxaE44/tokens 304 in 1ms
+2025-07-13 10:00:43.01
+8533ecfd
+User
+5:00:43 PM [express] GET /api/crm/wJgEpmLzMZABRKEFxaE44/contacts 401 in 0ms :: {"error":"Elevated to…
+2025-07-13 10:00:48.41

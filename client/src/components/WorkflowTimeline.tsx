@@ -30,7 +30,7 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
       icon: Key,
       details: {
         requestedScope: 'crm_read',
-        approver: 'Sarah Chen',
+        approver: 'Krish Venkatraman',
       },
     },
     {

@@ -194,5 +194,6 @@ Required environment variables for production deployment:
 - **2025-07-13**: DATABASE: Added chat_messages table to schema with full CRUD operations in storage layer
 - **2025-07-13**: API: Added /chat-message POST and /chat-messages GET endpoints for message persistence
 - **2025-07-13**: FRONTEND: Enhanced ChatInterface with message persistence and automatic chat history loading
+- **2025-07-13**: UX IMPROVEMENT: Updated Token Status display to show "Act on behalf of access token" instead of "Access Token" to better reflect Zero Trust delegation concept
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

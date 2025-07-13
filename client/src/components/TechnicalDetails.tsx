@@ -103,7 +103,7 @@ export function TechnicalDetails({ tokens, sessionId }: TechnicalDetailsProps) {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-neutral-600">Access Token:</span>
+                <span className="text-neutral-600">Act on behalf of access token:</span>
                 <span className={getTokenStatus('access_token') === 'Valid' ? 'text-success' : 'text-warning'}>
                   {getTokenStatus('access_token')}
                 </span>

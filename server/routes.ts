@@ -905,10 +905,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { sessionId } = req.params;
       const { targetUser, requestedScope } = req.body;
       
-      console.log(`Getting elevated token for session ${sessionId}, user: ${targetUser}, scope: ${requestedScope}`);
+      console.log(`🔍 Getting elevated token for session ${sessionId}, user: ${targetUser}, scope: ${requestedScope}`);
       
       // Get elevated token using PAM service
       const accessToken = await pamService.getElevatedToken([requestedScope], targetUser);
+      
+      console.log(`🔍 PAM service returned token: ${accessToken?.substring(0, 20) + '...'}`);
+      console.log(`🔍 Token type: ${typeof accessToken}`);
+      console.log(`🔍 Token length: ${accessToken?.length}`);
       
       // Store the token
       await storage.createToken({
@@ -920,13 +924,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt: new Date(Date.now() + 3600000) // 1 hour
       });
       
-      res.json({ 
+      const response = { 
         success: true, 
         message: `✅ Received access token to act as user ${targetUser}`,
         accessToken,
         actingAs: targetUser,
         scope: requestedScope
-      });
+      };
+      
+      console.log(`🔍 Sending response with accessToken: ${response.accessToken?.substring(0, 20) + '...'}`);
+      
+      res.json(response);
     } catch (error) {
       console.error('Error getting elevated token:', error);
       res.status(500).json({ error: 'Failed to get elevated token' });
@@ -941,6 +949,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`🔍 Accessing CRM data for session ${sessionId}, user: ${targetUser}`);
       console.log(`🔍 Request body:`, { targetUser, accessToken: accessToken?.substring(0, 20) + '...' });
+      console.log(`🔍 Access token type: ${typeof accessToken}`);
+      console.log(`🔍 Access token length: ${accessToken?.length}`);
+      console.log(`🔍 Access token value: ${accessToken}`);
+      
+      if (!accessToken || accessToken === 'undefined') {
+        console.log('❌ Access token is undefined or null');
+        return res.status(400).json({ error: 'Access token is undefined or null' });
+      }
+      
       console.log('Using elevated token with act_as delegation');
       
       // Use CRM service to get contact data (use existing contact ID from mock data)

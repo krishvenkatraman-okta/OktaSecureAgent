@@ -1,0 +1,92 @@
+04:28.12
+5613f9f7
+User
+Error generating RSA key pair: TypeError: Cannot read properties of undefined (reading 'createKeyStore')
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at PAMService.generateRSAKeyPair (file:///home/runner/workspace/dist/index.js:181:33)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at async PAMService.retrieveSecret (file:///home/runner/workspace/dist/index.js:221:41)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at async PAMService.getElevatedToken (file:///home/runner/workspace/dist/index.js:263:28)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at async file:///home/runner/workspace/dist/index.js:749:29
+2025-07-13 09:04:28.12
+5613f9f7
+User
+Error retrieving PAM secret: Error: Failed to generate RSA key pair
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at PAMService.generateRSAKeyPair (file:///home/runner/workspace/dist/index.js:202:13)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at async PAMService.retrieveSecret (file:///home/runner/workspace/dist/index.js:221:41)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at async PAMService.getElevatedToken (file:///home/runner/workspace/dist/index.js:263:28)
+2025-07-13 09:04:28.12
+5613f9f7
+User
+at async file:///home/runner/workspace/dist/index.js:749:29
+2025-07-13 09:04:28.12
+5613f9f7
+User
+Response status: undefined
+2025-07-13 09:04:28.12
+5613f9f7
+User
+Response data: undefined
+2025-07-13 09:04:28.12
+5613f9f7
+User
+Simulating successful PAM reveal for demo purposes
+2025-07-13 09:04:28.17
+5613f9f7
+User
+Error getting elevated token: AxiosError: Request failed with status code 404
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at settle (file:///home/runner/workspace/node_modules/axios/lib/core/settle.js:19:12)
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at IncomingMessage.handleStreamEnd (file:///home/runner/workspace/node_modules/axios/lib/adapters/http.js:599:11)
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at IncomingMessage.emit (node:events:530:35)
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at endReadableNT (node:internal/streams/readable:1698:12)
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at Axios.request (file:///home/runner/workspace/node_modules/axios/lib/core/Axios.js:45:41)
+2025-07-13 09:04:28.17
+5613f9f7
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)

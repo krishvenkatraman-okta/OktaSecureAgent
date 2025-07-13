@@ -59,31 +59,38 @@ export class PAMService {
 
   private async generateRSAKeyPair(): Promise<{ publicKey: any, privateKey: any }> {
     try {
-      const jose = await import('node-jose');
+      // Use Node.js built-in crypto for RSA key generation instead of node-jose
+      const crypto = await import('crypto');
       
-      // Generate RSA key pair for PAM encryption
-      const keystore = jose.JWK.createKeyStore();
-      const key = await keystore.generate('RSA', 2048, {
-        alg: 'RSA-OAEP-256',
-        use: 'enc',
-        key_ops: ['encrypt']
+      // Generate RSA key pair using Node.js crypto
+      const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+        modulusLength: 2048,
+        publicKeyEncoding: {
+          type: 'spki',
+          format: 'pem'
+        },
+        privateKeyEncoding: {
+          type: 'pkcs8',
+          format: 'pem'
+        }
       });
 
-      // Export public key in JWK format as required by PAM API
-      const publicKeyJWK = key.toJSON();
+      // Convert to JWK format for PAM API
+      const publicKeyObject = crypto.createPublicKey(publicKey);
+      const publicKeyJWK = publicKeyObject.export({ format: 'jwk' });
       
       console.log('RSA key pair generated for PAM encryption');
       
       return {
         publicKey: {
-          kty: publicKeyJWK.kty,
+          kty: 'RSA',
           alg: 'RSA-OAEP-256',
           use: 'enc',
           key_ops: ['encrypt'],
           n: publicKeyJWK.n,
           e: publicKeyJWK.e
         },
-        privateKey: key
+        privateKey: privateKey
       };
     } catch (error) {
       console.error('Error generating RSA key pair:', error);
@@ -167,7 +174,7 @@ export class PAMService {
       console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
       
       // For demo purposes, return mock secret
-      console.log('Simulating successful PAM reveal for demo purposes');
+      console.log('PAM secret retrieval failed, using demo client secret for workflow progression');
       return 'demo-client-secret-from-pam-vault';
     }
   }

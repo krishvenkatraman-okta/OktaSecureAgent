@@ -9,36 +9,112 @@ export interface CRMContact {
   status: string;
   lastModified: Date;
   owner: string;
+  salesRecords?: {
+    totalDeals: number;
+    closedWon: number;
+    totalRevenue: string;
+    lastDealDate: string;
+    pipeline: Array<{
+      opportunityId: string;
+      dealName: string;
+      stage: string;
+      amount: string;
+      closeDate: string;
+    }>;
+  };
 }
 
 export class CRMService {
   private contacts: Map<string, CRMContact[]> = new Map();
 
   constructor() {
-    // Initialize with sample data for brandon.stark@acme.com
+    // Initialize with Brandon Stark's actual contact information and sales records
     this.contacts.set('brandon.stark@acme.com', [
       {
         id: 'contact_001',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        company: 'Example Corp',
-        phone: '+1-555-0123',
-        status: 'Active',
+        firstName: 'Brandon',
+        lastName: 'Stark',
+        email: 'brandon.stark@acme.com',
+        company: 'Acme Corporation',
+        phone: '+1-555-STARK',
+        status: 'Active Customer',
         lastModified: new Date('2024-01-15T10:30:00Z'),
         owner: 'brandon.stark@acme.com',
+        salesRecords: {
+          totalDeals: 8,
+          closedWon: 6,
+          totalRevenue: '$2,450,000',
+          lastDealDate: '2024-01-10',
+          pipeline: [
+            {
+              opportunityId: 'OPP-2024-001',
+              dealName: 'Enterprise Security Suite',
+              stage: 'Negotiation',
+              amount: '$850,000',
+              closeDate: '2024-02-15'
+            },
+            {
+              opportunityId: 'OPP-2024-002',
+              dealName: 'Cloud Migration Services',
+              stage: 'Proposal',
+              amount: '$320,000',
+              closeDate: '2024-03-01'
+            }
+          ]
+        }
       },
       {
         id: 'contact_002',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        email: 'jane.smith@techco.com',
-        company: 'TechCo Inc',
-        phone: '+1-555-0456',
-        status: 'Lead',
+        firstName: 'Arya',
+        lastName: 'Stark',
+        email: 'arya.stark@winterfell.com',
+        company: 'Winterfell Industries',
+        phone: '+1-555-WOLF',
+        status: 'Qualified Lead',
         lastModified: new Date('2024-01-16T14:22:00Z'),
         owner: 'brandon.stark@acme.com',
+        salesRecords: {
+          totalDeals: 2,
+          closedWon: 1,
+          totalRevenue: '$75,000',
+          lastDealDate: '2023-12-20',
+          pipeline: [
+            {
+              opportunityId: 'OPP-2024-003',
+              dealName: 'Identity Management Platform',
+              stage: 'Discovery',
+              amount: '$180,000',
+              closeDate: '2024-04-15'
+            }
+          ]
+        }
       },
+      {
+        id: 'contact_003',
+        firstName: 'Jon',
+        lastName: 'Snow',
+        email: 'jon.snow@nightswatch.org',
+        company: 'Night\'s Watch Security',
+        phone: '+1-555-WALL',
+        status: 'Prospect',
+        lastModified: new Date('2024-01-17T09:15:00Z'),
+        owner: 'brandon.stark@acme.com',
+        salesRecords: {
+          totalDeals: 0,
+          closedWon: 0,
+          totalRevenue: '$0',
+          lastDealDate: 'N/A',
+          pipeline: [
+            {
+              opportunityId: 'OPP-2024-004',
+              dealName: 'Zero Trust Security Assessment',
+              stage: 'Prospecting',
+              amount: '$45,000',
+              closeDate: '2024-05-01'
+            }
+          ]
+        }
+      }
     ]);
   }
 

@@ -340,10 +340,24 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           // Extract contact data from the API response structure
           const contactData = crmData.contactData;
           
+          // Format sales records if available
+          let salesInfo = '';
+          if (contactData.salesRecords) {
+            const sales = contactData.salesRecords;
+            salesInfo = `\n\n💰 **Sales Records:**\n• Total Deals: ${sales.totalDeals}\n• Closed Won: ${sales.closedWon}\n• Total Revenue: ${sales.totalRevenue}\n• Last Deal: ${sales.lastDealDate}`;
+            
+            if (sales.pipeline && sales.pipeline.length > 0) {
+              salesInfo += `\n\n📊 **Current Pipeline:**`;
+              sales.pipeline.forEach(deal => {
+                salesInfo += `\n• ${deal.dealName} - ${deal.stage} (${deal.amount})`;
+              });
+            }
+          }
+
           const successMessage: ChatMessage = {
             id: nanoid(),
             type: 'bot',
-            message: `🎉 Success! Retrieved CRM data for ${targetUser}:\n\n📋 **Contact Information:**\n• Name: ${contactData.firstName} ${contactData.lastName}\n• Email: ${contactData.email}\n• Company: ${contactData.company}\n• Phone: ${contactData.phone || 'Not provided'}\n• Status: ${contactData.status}\n• Owner: ${contactData.owner}`,
+            message: `🎉 Success! Retrieved CRM data for ${targetUser}:\n\n📋 **Contact Information:**\n• Name: ${contactData.firstName} ${contactData.lastName}\n• Email: ${contactData.email}\n• Company: ${contactData.company}\n• Phone: ${contactData.phone || 'Not provided'}\n• Status: ${contactData.status}\n• Owner: ${contactData.owner}${salesInfo}`,
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, successMessage]);
@@ -728,10 +742,24 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               // Extract contact data from the API response structure
               const contactData = crmData.contactData;
               
+              // Format sales records if available
+              let salesInfo = '';
+              if (contactData.salesRecords) {
+                const sales = contactData.salesRecords;
+                salesInfo = `\n\n**Sales Records:**\n- Total Deals: ${sales.totalDeals}\n- Closed Won: ${sales.closedWon}\n- Total Revenue: ${sales.totalRevenue}\n- Last Deal: ${sales.lastDealDate}`;
+                
+                if (sales.pipeline && sales.pipeline.length > 0) {
+                  salesInfo += `\n\n**Current Pipeline:**`;
+                  sales.pipeline.forEach(deal => {
+                    salesInfo += `\n- ${deal.dealName} - ${deal.stage} (${deal.amount})`;
+                  });
+                }
+              }
+
               const successMessage: ChatMessage = {
                 id: (Date.now() + 2).toString(),
                 type: 'bot',
-                message: `🎉 Successfully retrieved CRM data for ${actingAsUser}!\n\n**Contact Information:**\n- Name: ${contactData.firstName} ${contactData.lastName}\n- Email: ${contactData.email}\n- Company: ${contactData.company}\n- Phone: ${contactData.phone || 'N/A'}\n- Status: ${contactData.status}\n\nThe Zero Trust workflow is complete! All access was properly authorized through IGA approval and user consent.`,
+                message: `🎉 Successfully retrieved CRM data for ${actingAsUser}!\n\n**Contact Information:**\n- Name: ${contactData.firstName} ${contactData.lastName}\n- Email: ${contactData.email}\n- Company: ${contactData.company}\n- Phone: ${contactData.phone || 'N/A'}\n- Status: ${contactData.status}${salesInfo}\n\nThe Zero Trust workflow is complete! All access was properly authorized through IGA approval and user consent.`,
                 timestamp: new Date(),
               };
               setMessages(prev => [...prev, successMessage]);

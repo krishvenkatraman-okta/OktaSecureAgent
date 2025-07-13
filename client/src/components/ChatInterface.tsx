@@ -248,7 +248,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               message: `✅ Push approval received from Brandon! Moving to PAM to retrieve client credentials with act_as claims...`,
               timestamp: new Date(),
             };
-            setMessages(prev => [...prev, approvedMessage]);
+            addMessage(approvedMessage);
             
             // Immediately continue with PAM and CRM access
             handlePamAndCrmAccess(targetUser);
@@ -267,7 +267,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               message: `❌ ${targetUser} denied your access request. You cannot access their CRM data.`,
               timestamp: new Date(),
             };
-            setMessages(prev => [...prev, deniedMessage]);
+            addMessage(deniedMessage);
             
           } else if (data.status === 'WAITING' && attempts >= maxAttempts) {
             // Timeout after max attempts
@@ -282,7 +282,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               message: `⏰ Push notification timed out. ${targetUser} did not respond within the time limit.`,
               timestamp: new Date(),
             };
-            setMessages(prev => [...prev, timeoutMessage]);
+            addMessage(timeoutMessage);
           } else if (data.status === 'WAITING') {
             // Still waiting, continue polling
             console.log(`Still waiting for ${targetUser} to respond... (attempt ${attempts}/${maxAttempts})`);
@@ -572,7 +572,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           action: 'auth'
         };
         
-        setMessages(prev => [...prev, botMessage]);
+        addMessage(botMessage);
         
         // Trigger Okta authentication immediately
         setTimeout(() => {
@@ -587,7 +587,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: 'Checking your Okta app membership for CRM access...',
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, botMessage]);
+        addMessage(botMessage);
         
         try {
           const response = await fetch(`/api/workflow/${sessionId}/check-app-access`, {
@@ -606,7 +606,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                 message: `✅ Great! You have CRM app access. Please specify which user's data you need (e.g., "brandon.stark@acme.com").`,
                 timestamp: new Date(),
               };
-              setMessages(prev => [...prev, successMessage]);
+              addMessage(successMessage);
             } else {
               // No access - trigger IGA request
               const deniedMessage: ChatMessage = {
@@ -615,7 +615,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                 message: `❌ You don't have CRM app access. Submitting an Identity Governance (IGA) request for access approval...`,
                 timestamp: new Date(),
               };
-              setMessages(prev => [...prev, deniedMessage]);
+              addMessage(deniedMessage);
               
               // Submit IGA request automatically
               try {
@@ -637,7 +637,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                     timestamp: new Date(),
                     action: 'pending_iga_approval'
                   };
-                  setMessages(prev => [...prev, pendingMessage]);
+                  addMessage(pendingMessage);
                   setPendingAccessRequest(igaData);
                 } else {
                   const errorData = await igaResponse.json();
@@ -647,7 +647,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                     message: `❌ Failed to submit IGA request: ${errorData.error}`,
                     timestamp: new Date(),
                   };
-                  setMessages(prev => [...prev, errorMessage]);
+                  addMessage(errorMessage);
                 }
               } catch (error) {
                 console.error('IGA request error:', error);
@@ -657,7 +657,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                   message: `❌ Error submitting IGA request. Please try again.`,
                   timestamp: new Date(),
                 };
-                setMessages(prev => [...prev, errorMessage]);
+                addMessage(errorMessage);
               }
             }
           } else {
@@ -667,7 +667,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               message: `❌ Failed to check app access. Please try again.`,
               timestamp: new Date(),
             };
-            setMessages(prev => [...prev, errorMessage]);
+            addMessage(errorMessage);
           }
         } catch (error) {
           console.error('App access check error:', error);
@@ -677,7 +677,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             message: `❌ Error checking app access. Please try again.`,
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, errorMessage]);
+          addMessage(errorMessage);
         }
         
       } else if (lowerInput.includes('next') && pendingAccessRequest) {
@@ -688,7 +688,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: `✅ Great! Manager has approved your IGA request. Re-checking your CRM app access...`,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, botMessage]);
+        addMessage(botMessage);
         
         // Simulate access granted and proceed to user data request
         setTimeout(async () => {
@@ -711,7 +711,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             message: `🎉 Perfect! You now have CRM app access. Please specify which user's data you need (e.g., "brandon.stark@acme.com").`,
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, successMessage]);
+          addMessage(successMessage);
         }, 1000);
         
       } else if (hasGroupAccess && lowerInput.includes('@')) {
@@ -723,7 +723,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: `Sending push notification to ${targetUser} for consent to access their CRM data...`,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, botMessage]);
+        addMessage(botMessage);
         
         try {
           const response = await fetch(`/api/workflow/${sessionId}/send-push-notification`, {

@@ -337,10 +337,13 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           const crmData = await crmResponse.json();
           setCrmData(crmData);
           
+          // Extract contact data from the API response structure
+          const contactData = crmData.contactData;
+          
           const successMessage: ChatMessage = {
             id: nanoid(),
             type: 'bot',
-            message: `🎉 Success! Retrieved CRM data for ${targetUser}:\n\n📋 **Contact Information:**\n• Name: ${crmData.firstName} ${crmData.lastName}\n• Email: ${crmData.email}\n• Company: ${crmData.company}\n• Phone: ${crmData.phone || 'Not provided'}\n• Status: ${crmData.status}\n• Owner: ${crmData.owner}`,
+            message: `🎉 Success! Retrieved CRM data for ${targetUser}:\n\n📋 **Contact Information:**\n• Name: ${contactData.firstName} ${contactData.lastName}\n• Email: ${contactData.email}\n• Company: ${contactData.company}\n• Phone: ${contactData.phone || 'Not provided'}\n• Status: ${contactData.status}\n• Owner: ${contactData.owner}`,
             timestamp: new Date(),
           };
           setMessages(prev => [...prev, successMessage]);
@@ -722,10 +725,13 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
               const crmData = await crmResponse.json();
               setCrmData(crmData);
               
+              // Extract contact data from the API response structure
+              const contactData = crmData.contactData;
+              
               const successMessage: ChatMessage = {
                 id: (Date.now() + 2).toString(),
                 type: 'bot',
-                message: `🎉 Successfully retrieved CRM data for ${actingAsUser}!\n\n**Contact Information:**\n- Name: ${crmData.firstName} ${crmData.lastName}\n- Email: ${crmData.email}\n- Company: ${crmData.company}\n- Phone: ${crmData.phone || 'N/A'}\n- Status: ${crmData.status}\n\nThe Zero Trust workflow is complete! All access was properly authorized through IGA approval and user consent.`,
+                message: `🎉 Successfully retrieved CRM data for ${actingAsUser}!\n\n**Contact Information:**\n- Name: ${contactData.firstName} ${contactData.lastName}\n- Email: ${contactData.email}\n- Company: ${contactData.company}\n- Phone: ${contactData.phone || 'N/A'}\n- Status: ${contactData.status}\n\nThe Zero Trust workflow is complete! All access was properly authorized through IGA approval and user consent.`,
                 timestamp: new Date(),
               };
               setMessages(prev => [...prev, successMessage]);

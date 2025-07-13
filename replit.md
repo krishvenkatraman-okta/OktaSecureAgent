@@ -202,5 +202,7 @@ Required environment variables for production deployment:
 - **2025-07-13**: UX IMPROVEMENT: After IGA approval, bot now asks what CRM data you need instead of auto-proceeding
 - **2025-07-13**: SMART INPUT: Enhanced input parsing to handle "get me details of brandon.stark@acme.com" and extract email addresses from natural language requests
 - **2025-07-13**: PERSISTENCE: Replaced all remaining setMessages calls with addMessage for complete chat message persistence across all workflow states
+- **2025-07-13**: AUTHENTICATION: Enhanced welcome message extraction to properly display "Welcome Okta Admin!" using user's actual name from Okta ID token claims
+- **2025-07-13**: UX IMPROVEMENT: Complete chat persistence with personalized authentication greeting and interactive workflow progression
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

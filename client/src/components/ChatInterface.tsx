@@ -162,12 +162,13 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         })
         .catch(error => {
           console.error('Error fetching tokens:', error);
-          setMessages([{
+          const fallbackWelcomeMessage: ChatMessage = {
             id: '1',
             type: 'bot',
             message: `Welcome! You've been successfully authenticated via Okta OIDC. I'll now automatically check your CRM app access...`,
             timestamp: new Date(),
-          }]);
+          };
+          addMessage(fallbackWelcomeMessage);
           
           // Still proceed with app access check even if name extraction fails
           setTimeout(() => {
@@ -175,12 +176,13 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           }, 2000);
         });
     } else {
-      setMessages([{
+      const initialMessage: ChatMessage = {
         id: '1',
         type: 'bot',
         message: 'Hello! I\'m your AI agent. I can help you access CRM data securely. Just ask me to "get CRM data" and I\'ll handle the authentication and authorization process.',
         timestamp: new Date(),
-      }]);
+      };
+      addMessage(initialMessage);
     }
   }, [isAuthenticated, currentStep, sessionId]);
 

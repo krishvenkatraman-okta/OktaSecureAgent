@@ -24,12 +24,12 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
     },
     {
       id: 2,
-      title: 'Welcome User Profile',
-      description: 'Extract user claims from ID token and display welcome message',
+      title: 'User Authentication Complete',
+      description: 'User successfully authenticated and claims extracted',
       icon: User,
       details: {
-        claims: 'name, email, preferred_username',
-        tokenType: 'ID Token',
+        status: 'Authenticated',
+        userInfo: 'Claims extracted from ID token',
       },
     },
     {
@@ -68,11 +68,19 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
 
   const getStepStatus = (stepId: number) => {
     console.log(`🔍 Timeline step ${stepId} status check - currentStep: ${currentStep}`);
-    // Only show step 2+ if user is actually authenticated (currentStep > 1)
-    if (stepId > 1 && currentStep === 1) {
+    
+    // Special handling for step 2 - always show as completed if currentStep >= 2
+    if (stepId === 2 && currentStep >= 2) {
+      console.log(`Step 2 forced completed because currentStep >= 2`);
+      return 'completed';
+    }
+    
+    // Only show step 3+ if authenticated (currentStep > 1)
+    if (stepId > 2 && currentStep === 1) {
       console.log(`Step ${stepId} hidden because currentStep is 1`);
       return 'hidden';
     }
+    
     if (stepId < currentStep) {
       console.log(`Step ${stepId} completed because stepId < currentStep (${currentStep})`);
       return 'completed';

@@ -758,30 +758,23 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           const successMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
             type: 'bot',
-            message: `🎉 Perfect! You now have CRM app access. I'll now request access to Brandon Stark's CRM data...`,
+            message: `🎉 Perfect! You now have CRM app access. What CRM data would you like me to retrieve? For example, you can say "get me details of brandon.stark@acme.com"`,
             timestamp: new Date(),
           };
           addMessage(successMessage);
-          
-          // Automatically request access to Brandon Stark's data
-          setTimeout(() => {
-            const targetUser = 'brandon.stark@acme.com';
-            const autoRequestMessage: ChatMessage = {
-              id: (Date.now() + 3).toString(),
-              type: 'bot',
-              message: `Sending push notification to ${targetUser} for consent to access their CRM data...`,
-              timestamp: new Date(),
-            };
-            addMessage(autoRequestMessage);
-            
-            // Proceed with push notification flow
-            sendPushNotificationAndContinue(targetUser);
-          }, 1500);
         }, 1000);
         
-      } else if (hasGroupAccess && lowerInput.includes('@')) {
-        // User specified target email - send push notification
-        const targetUser = currentInput.trim();
+      } else if (hasGroupAccess && (lowerInput.includes('@') || lowerInput.includes('details') || lowerInput.includes('get me'))) {
+        // Extract email from user input - handle both direct email and "get me details of X" format
+        let targetUser = currentInput.trim();
+        
+        // If user said "get me details of X" extract the email
+        const emailMatch = currentInput.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+        if (emailMatch) {
+          targetUser = emailMatch[1];
+        } else if (lowerInput.includes('brandon')) {
+          targetUser = 'brandon.stark@acme.com';
+        }
         const botMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           type: 'bot',

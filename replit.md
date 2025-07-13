@@ -199,8 +199,8 @@ Required environment variables for production deployment:
 - **2025-07-13**: WORKFLOW FIX: Fixed authentication flow, IGA requests, PAM/CRM access, and error handling messages to persist correctly across workflow transitions
 - **2025-07-13**: PERSISTENCE: All key workflow messages now save to backend ensuring chat history survives page refreshes and workflow completions
 - **2025-07-13**: CRITICAL FIX: Fixed authentication flow setMessages override that was clearing chat history after IGA approval completion
-- **2025-07-13**: WORKFLOW AUTOMATION: Added automatic Brandon Stark email request after IGA approval - no more manual email input required
-- **2025-07-13**: UX IMPROVEMENT: Complete workflow now progresses automatically from IGA approval through push notification and CRM data retrieval
+- **2025-07-13**: UX IMPROVEMENT: After IGA approval, bot now asks what CRM data you need instead of auto-proceeding
+- **2025-07-13**: SMART INPUT: Enhanced input parsing to handle "get me details of brandon.stark@acme.com" and extract email addresses from natural language requests
 - **2025-07-13**: PERSISTENCE: Replaced all remaining setMessages calls with addMessage for complete chat message persistence across all workflow states
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

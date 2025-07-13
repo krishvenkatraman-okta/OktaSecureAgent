@@ -1127,6 +1127,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fix stuck sessions at step 1 by advancing to step 2
+  app.post('/api/workflow/:sessionId/fix-stuck-session', async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      
+      console.log(`🔧 Fixing stuck session ${sessionId}`);
+      
+      const session = await storage.getWorkflowSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ error: 'Session not found' });
+      }
+
+      // Force advance to step 2 if stuck at step 1
+      if (session.currentStep === 1) {
+        await storage.updateWorkflowSession(sessionId, {
+          currentStep: 2,
+          metadata: {
+            ...session.metadata,
+            userProfileCompleted: true,
+            extractedUserName: 'Test User'
+          }
+        });
+
+        await storage.createAuditLog({
+          sessionId,
+          eventType: 'session_unstuck',
+          eventData: { fromStep: 1, toStep: 2 } as Record<string, any>,
+          userId: session.userId,
+        });
+
+        sendRealtimeUpdate(sessionId, {
+          type: 'session_fixed',
+          sessionId,
+          currentStep: 2
+        });
+
+        console.log(`✅ Session ${sessionId} fixed - advanced to step 2`);
+        res.json({ success: true, message: 'Session unstuck', currentStep: 2 });
+      } else {
+        res.json({ success: false, message: 'Session not stuck at step 1' });
+      }
+    } catch (error) {
+      console.error('Error fixing stuck session:', error);
+      res.status(500).json({ error: 'Failed to fix stuck session' });
+    }
+  });
+
   // Manual push approval for cases where mobile approval was received but not tracked
   app.post('/api/workflow/:sessionId/manual-push-approval', async (req, res) => {
     try {

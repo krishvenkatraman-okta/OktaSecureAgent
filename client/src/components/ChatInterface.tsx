@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { nanoid } from 'nanoid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -146,14 +147,14 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             
             // Force immediate hard reload to refresh all state
             console.log('🔄 Forcing HARD page reload to refresh state...');
-            window.location.reload(true);
+            window.location.reload();
           }).catch(err => {
             console.error('❌ Failed to complete step 2:', err);
             console.log('❌ Will reload anyway to check current state...');
             // Still reload to try to get the updated state
             setTimeout(() => {
               console.log('🔄 Error case - forcing HARD reload...');
-              window.location.reload(true);
+              window.location.reload();
             }, 100);
           });
           
@@ -318,7 +319,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             console.log(`Still waiting for ${targetUser} to respond... (attempt ${attempts}/${maxAttempts})`);
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error polling push notification:', error);
         
         // Stop polling on 404/410 (session not found) or after max attempts
@@ -433,7 +434,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             
             if (sales.pipeline && sales.pipeline.length > 0) {
               salesInfo += `\n\n📊 **Current Pipeline:**`;
-              sales.pipeline.forEach(deal => {
+              sales.pipeline.forEach((deal: any) => {
                 salesInfo += `\n• ${deal.dealName} - ${deal.stage} (${deal.amount})`;
               });
             }
@@ -452,7 +453,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       } else {
         throw new Error('Failed to get PAM credentials');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in PAM/CRM flow:', error);
       const errorMessage: ChatMessage = {
         id: nanoid(),
@@ -606,7 +607,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         };
         addMessage(errorMessage);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Push notification error:', error);
       const errorMessage: ChatMessage = {
         id: (Date.now() + 4).toString(),
@@ -840,7 +841,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             };
             addMessage(errorMessage);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Push notification error:', error);
           const errorMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
@@ -922,7 +923,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
                 
                 if (sales.pipeline && sales.pipeline.length > 0) {
                   salesInfo += `\n\n**Current Pipeline:**`;
-                  sales.pipeline.forEach(deal => {
+                  sales.pipeline.forEach((deal: any) => {
                     salesInfo += `\n- ${deal.dealName} - ${deal.stage} (${deal.amount})`;
                   });
                 }
@@ -953,7 +954,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             };
             setMessages(prev => [...prev, errorMessage]);
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('PAM/CRM access error:', error);
           const errorMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),

@@ -196,6 +196,7 @@ export class MemStorage implements IStorage {
       ...message,
       id: this.chatMessageId++,
       createdAt: new Date(),
+      messageAction: message.messageAction ?? null,
     };
     this.chatMessages.set(newMessage.id, newMessage);
     return newMessage;

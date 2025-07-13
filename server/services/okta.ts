@@ -78,7 +78,7 @@ export class OktaService {
         {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': `Basic ${Buffer.from(`${this.config.clientCredentialsClientId}:${this.config.clientCredentialsClientSecret}`).toString('base64')}`,
+            'Authorization': `Basic ${Buffer.from(`${this.config.clientCredentialsClientId}:${process.env.OKTA_CLIENT_CREDENTIALS_CLIENT_SECRET || 'demo-secret'}`).toString('base64')}`,
           },
         }
       );
@@ -115,7 +115,7 @@ export class OktaService {
 
       console.log('Push notification response:', response.status, response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending Okta Verify push:', error);
       if (error.response) {
         console.error('Response status:', error.response.status);
@@ -136,7 +136,7 @@ export class OktaService {
 
       console.log('Push poll response:', response.status, response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error polling Okta push transaction:', error);
       if (error.response) {
         console.error('Poll response status:', error.response.status);

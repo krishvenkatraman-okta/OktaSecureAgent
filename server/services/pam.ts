@@ -50,7 +50,7 @@ export class PAMService {
       const bearerToken = response.data.bearer_token;
       console.log('PAM service bearer token obtained successfully');
       return bearerToken;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting PAM service bearer token:', error);
       console.error('Response status:', error.response?.status);
       console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
@@ -93,7 +93,7 @@ export class PAMService {
         },
         privateKey: privateKey
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating RSA key pair:', error);
       throw new Error('Failed to generate RSA key pair');
     }
@@ -169,7 +169,7 @@ export class PAMService {
       const secretValue = response.data.secret_value || response.data.value || response.data.secret;
       return secretValue || 'w-duI3IyYtEqlNKsmlR2LaRICXVUUr61sMzYHbeQ2q5_3qeoTTtSETIvzjPPLA9O';
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error retrieving PAM secret:', error);
       console.error('Response status:', error.response?.status);
       console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
@@ -229,7 +229,7 @@ export class PAMService {
       console.log('Token expires in:', response.data.expires_in);
       
       return accessToken;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting elevated token:', error);
       console.error('Response status:', error.response?.status);
       console.error('Response data:', JSON.stringify(error.response?.data, null, 2));
@@ -254,7 +254,7 @@ export class PAMService {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error checking PAM request status:', error);
       throw new Error('Failed to check PAM request status');
     }

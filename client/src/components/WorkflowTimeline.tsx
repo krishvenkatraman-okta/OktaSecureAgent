@@ -22,29 +22,19 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
         scopes: 'openid, profile, email',
       },
     },
+
     {
       id: 2,
-      title: 'User Authentication Complete',
-      description: 'User successfully authenticated and claims extracted',
-      icon: User,
-      details: {
-        status: 'Authenticated',
-        userInfo: 'Claims extracted from ID token',
-      },
-    },
-    {
-      id: 3,
-      title: 'IGA Access Request + User Profile',
-      description: 'Submit IGA approval request for crm_read scope and fetch user profile',
+      title: 'IGA Access Request',
+      description: 'Submit IGA approval request for crm_read scope',
       icon: Key,
       details: {
         requestedScope: 'crm_read',
-        userProfileScope: 'okta.users.read',
         approver: 'Sarah Chen',
       },
     },
     {
-      id: 4,
+      id: 3,
       title: 'PAM Secret Retrieval',
       description: 'Retrieve client credentials from PAM vault for elevated access',
       icon: Shield,
@@ -55,7 +45,7 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
       },
     },
     {
-      id: 5,
+      id: 4,
       title: 'CRM Data Access',
       description: 'Access Salesforce CRM API with delegated permissions',
       icon: Database,
@@ -69,14 +59,8 @@ export function WorkflowTimeline({ currentStep, sessionId, userId }: WorkflowTim
   const getStepStatus = (stepId: number) => {
     console.log(`🔍 Timeline step ${stepId} status check - currentStep: ${currentStep}`);
     
-    // Special handling for step 2 - always show as completed if currentStep >= 2
-    if (stepId === 2 && currentStep >= 2) {
-      console.log(`Step 2 forced completed because currentStep >= 2`);
-      return 'completed';
-    }
-    
-    // Only show step 3+ if authenticated (currentStep > 1)
-    if (stepId > 2 && currentStep === 1) {
+    // Only show step 2+ if authenticated (currentStep > 1)
+    if (stepId > 1 && currentStep === 1) {
       console.log(`Step ${stepId} hidden because currentStep is 1`);
       return 'hidden';
     }

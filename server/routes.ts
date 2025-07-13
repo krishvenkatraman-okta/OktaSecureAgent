@@ -253,69 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get elevated token with client credentials flow
-  app.post('/api/workflow/:sessionId/get-elevated-token', async (req, res) => {
-    try {
-      const { sessionId } = req.params;
-      const { targetUser, requestedScope } = req.body;
-      
-      console.log(`Step 1: Retrieving client credentials from PAM vault...`);
-      
-      // Step 1: Get client credentials secret from PAM
-      const clientSecret = await pamService.retrieveSecret();
-      console.log(`PAM client credentials retrieved successfully`);
-      
-      // Step 2: Use client credentials to get access token with crm_read scope and act_as claim
-      console.log(`Step 2: Requesting access token with ${requestedScope} scope and act_as claim for ${targetUser}...`);
-      let elevatedToken;
-      try {
-        elevatedToken = await pamService.getElevatedToken([requestedScope], targetUser);
-      } catch (error) {
-        console.log('PAM service failed, using demo elevated token for workflow');
-        elevatedToken = `demo_elevated_token_${Date.now()}_act_as_${targetUser.replace('@', '_at_')}`;
-      }
-      
-      // Store elevated token
-      await storage.createToken({
-        sessionId,
-        tokenType: 'elevated_access',
-        tokenValue: elevatedToken,
-        scopes: requestedScope,
-        expiresAt: new Date(Date.now() + 3600000),
-        actAs: targetUser
-      });
-      
-      await storage.createAuditLog({
-        sessionId,
-        eventType: 'elevated_token_obtained',
-        eventData: { targetUser, scope: requestedScope, tokenType: 'client_credentials_with_act_as' } as any,
-        userId: 'ai-agent',
-      });
-      
-      // Update workflow step
-      await storage.updateWorkflowSession(sessionId, {
-        currentStep: 4,
-        metadata: { elevatedTokenObtained: true, actingAs: targetUser } as any,
-      });
-      
-      sendRealtimeUpdate(sessionId, {
-        type: 'elevated_token_obtained',
-        step: 4,
-        actingAs: targetUser,
-        scope: requestedScope
-      });
-      
-      res.json({ 
-        success: true, 
-        actingAs: targetUser,
-        scope: requestedScope,
-        token: elevatedToken.substring(0, 20) + '...' // Show partial token for demo
-      });
-    } catch (error) {
-      console.error('Error getting elevated token:', error);
-      res.status(500).json({ error: 'Failed to get elevated token' });
-    }
-  });
+
 
   // Get CRM data using elevated token
   app.post('/api/workflow/:sessionId/get-crm-data', async (req, res) => {

@@ -355,7 +355,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         message: `🔐 Requesting client credentials from PAM secret vault with act_as claims for ${targetUser}...`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, pamMessage]);
+      addMessage(pamMessage);
       
       // Step 1: Get PAM credentials with act_as claims
       const pamResponse = await fetch(`/api/workflow/${sessionId}/get-elevated-token`, {
@@ -376,7 +376,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: `✅ PAM secret vault credentials retrieved successfully! Client credentials with act_as claims obtained. Now accessing CRM data with delegated permissions...`,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, pamSuccessMessage]);
+        addMessage(pamSuccessMessage);
         
         // Step 2: Access CRM data using the elevated token
         const crmResponse = await fetch(`/api/workflow/${sessionId}/access-crm`, {
@@ -415,7 +415,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             message: `🎉 Success! Retrieved CRM data for ${targetUser}:\n\n📋 **Contact Information:**\n• Name: ${contactData.firstName} ${contactData.lastName}\n• Email: ${contactData.email}\n• Company: ${contactData.company}\n• Phone: ${contactData.phone || 'Not provided'}\n• Status: ${contactData.status}\n• Owner: ${contactData.owner}${salesInfo}`,
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, successMessage]);
+          addMessage(successMessage);
         } else {
           throw new Error('Failed to access CRM data');
         }
@@ -430,7 +430,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         message: `❌ Error accessing CRM data: ${error.message}`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      addMessage(errorMessage);
     }
   };
 
@@ -443,7 +443,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
       message: 'Checking your Okta app membership for CRM access...',
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, checkingMessage]);
+    addMessage(checkingMessage);
     
     try {
       const response = await fetch(`/api/workflow/${sessionId}/check-app-access`, {
@@ -462,7 +462,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             message: `✅ Great! You have CRM app access. Please specify which user's data you need (e.g., "brandon.stark@acme.com").`,
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, successMessage]);
+          addMessage(successMessage);
         } else {
           // No access - trigger IGA request automatically
           const deniedMessage: ChatMessage = {
@@ -471,7 +471,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
             message: `❌ You don't have CRM app access. Submitting an Identity Governance (IGA) request for access approval...`,
             timestamp: new Date(),
           };
-          setMessages(prev => [...prev, deniedMessage]);
+          addMessage(deniedMessage);
           
           // Submit IGA request automatically
           setTimeout(() => {
@@ -485,7 +485,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
           message: `❌ Failed to check app access. Please try saying "get CRM data" to retry.`,
           timestamp: new Date(),
         };
-        setMessages(prev => [...prev, errorMessage]);
+        addMessage(errorMessage);
       }
     } catch (error) {
       console.error('App access check error:', error);
@@ -495,7 +495,7 @@ export function ChatInterface({ sessionId, onTriggerAuth, onRequestAccess, isAut
         message: `❌ Error checking app access. Please try saying "get CRM data" to retry.`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      addMessage(errorMessage);
     }
   };
 

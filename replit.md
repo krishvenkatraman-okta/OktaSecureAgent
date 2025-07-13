@@ -195,5 +195,8 @@ Required environment variables for production deployment:
 - **2025-07-13**: API: Added /chat-message POST and /chat-messages GET endpoints for message persistence
 - **2025-07-13**: FRONTEND: Enhanced ChatInterface with message persistence and automatic chat history loading
 - **2025-07-13**: UX IMPROVEMENT: Updated Token Status display to show "Act on behalf of access token" instead of "Access Token" to better reflect Zero Trust delegation concept
+- **2025-07-13**: CRITICAL FIX: Comprehensive chat message persistence implementation - replaced all critical setMessages calls with addMessage for proper backend storage
+- **2025-07-13**: WORKFLOW FIX: Fixed authentication flow, IGA requests, PAM/CRM access, and error handling messages to persist correctly across workflow transitions
+- **2025-07-13**: PERSISTENCE: All key workflow messages now save to backend ensuring chat history survives page refreshes and workflow completions
 
 The application demonstrates enterprise-grade security patterns while maintaining a clean, maintainable codebase suitable for educational and demonstration purposes.

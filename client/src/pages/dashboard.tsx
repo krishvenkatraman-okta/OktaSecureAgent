@@ -95,65 +95,17 @@ export default function Dashboard() {
   // Trigger Okta authentication when requested by chatbot
   const triggerAuthentication = async () => {
     try {
-      console.log('Triggering authentication...');
+      console.log('Triggering authentication with direct redirect...');
       
-      const response = await fetch('/api/auth/safe-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      toast({
+        title: 'Redirecting to Okta',
+        description: 'Opening Okta authentication...',
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Auth URL received:', data.authUrl);
-        console.log('Auth URL debug info:', data.debug);
-        
-        // Validate URL format before redirect
-        if (!data.authUrl.startsWith('https://')) {
-          throw new Error('Invalid authentication URL format received');
-        }
-        
-        // Store PKCE code verifier for token exchange
-        if (data.codeVerifier) {
-          sessionStorage.setItem('pkce_code_verifier', data.codeVerifier);
-        }
-        
-        toast({
-          title: 'Redirecting to Okta',
-          description: 'Opening Okta authentication...',
-        });
-        
-        // Multiple validation approaches for URL safety
-        console.log('Raw auth URL from server:', data.authUrl);
-        
-        // Method 1: Replace any malformed https patterns
-        let safeUrl = data.authUrl.replace(/^https\/\//, 'https://');
-        console.log('After pattern fix:', safeUrl);
-        
-        // Method 2: Use URL constructor for validation
-        try {
-          const urlObj = new URL(safeUrl);
-          safeUrl = urlObj.href;
-          console.log('After URL constructor:', safeUrl);
-        } catch (e) {
-          console.error('URL constructor failed, using original:', e);
-        }
-        
-        // Method 3: Final validation
-        if (!safeUrl.startsWith('https://')) {
-          console.error('CRITICAL: URL still malformed, forcing fix');
-          safeUrl = 'https://' + safeUrl.replace(/^https?:?\/?\/?/, '');
-        }
-        
-        console.log('Final redirect URL:', safeUrl);
-        console.log('URL validation passed:', safeUrl.startsWith('https://') && safeUrl.includes('fcxdemo.okta.com'));
-        
-        // Redirect to Okta for authentication
-        window.location.href = safeUrl;
-      } else {
-        const errorData = await response.text();
-        console.error('Auth response error:', errorData);
-        throw new Error(`Failed to get auth URL: ${response.status}`);
-      }
+      // Use direct server redirect instead of JavaScript redirect
+      // This bypasses any JavaScript URL manipulation issues
+      window.location.href = '/api/auth/direct-redirect';
+      
     } catch (error) {
       console.error('Authentication trigger failed:', error);
       toast({

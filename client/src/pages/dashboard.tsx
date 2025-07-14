@@ -122,8 +122,12 @@ export default function Dashboard() {
           description: 'Opening Okta authentication...',
         });
         
+        // Ensure URL is properly formatted before redirect
+        const safeUrl = data.authUrl.replace(/^https\/\//, 'https://');
+        console.log('Final redirect URL:', safeUrl);
+        
         // Redirect to Okta for authentication
-        window.location.href = data.authUrl;
+        window.location.href = safeUrl;
       } else {
         const errorData = await response.text();
         console.error('Auth response error:', errorData);

@@ -3,7 +3,8 @@ import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
+  // Allow both GET and POST for testing
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -50,13 +51,13 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       throw new Error('Domain missing from auth URL');  
     }
     
-    console.log('✅ BULLETPROOF Auth URL generated:', authUrl);
-    console.log('🔍 Domain check:', oktaDomain);
-    console.log('🌐 Protocol check:', protocol);
-    console.log('🏠 Host check:', host);
-    console.log('🔗 Full base URL:', fullBaseUrl);
-    console.log('✅ Contains https://:', authUrl.includes('https://'));
-    console.log('✅ Contains domain:', authUrl.includes(oktaDomain));
+    console.log('BULLETPROOF Auth URL generated:', authUrl);
+    console.log('Domain check:', oktaDomain);
+    console.log('Protocol check:', protocol);
+    console.log('Host check:', host);
+    console.log('Full base URL:', fullBaseUrl);
+    console.log('Contains https://:', authUrl.includes('https://'));
+    console.log('Contains domain:', authUrl.includes(oktaDomain));
     
     // Additional validation
     if (!authUrl.startsWith('https://')) {

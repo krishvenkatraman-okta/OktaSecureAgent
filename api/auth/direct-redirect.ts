@@ -96,25 +96,17 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     console.log('URL includes https://:', authUrl.includes('https://'));
     console.log('URL includes domain:', authUrl.includes(oktaDomain));
     
-    // Store PKCE verifier in cookie for later use
-    res.setHeader('Set-Cookie', `pkce_verifier=${codeVerifier}; HttpOnly; Path=/; Max-Age=600; SameSite=Lax`);
-    
     // Ensure the Location header gets the correct URL
     const locationHeader = authUrl;
     console.log('Final Location header:', locationHeader);
     console.log('Location header includes colon:', locationHeader.includes('://'));
     
-    // Store PKCE verifier in cookie
+    // Store PKCE verifier in cookie for later use (single setting)
     res.setHeader('Set-Cookie', `pkce_verifier=${codeVerifier}; HttpOnly; Path=/; Max-Age=600; SameSite=Lax`);
     
-    // Use explicit writeHead to ensure proper header format
-    res.writeHead(302, {
-      'Location': locationHeader,
-      'Cache-Control': 'no-cache',
-      'X-Debug-Original': authUrl,
-      'X-Debug-Fixed': locationHeader
-    });
-    res.end();
+    // Use standard redirect method instead of writeHead
+    console.log('Performing redirect to:', locationHeader);
+    res.redirect(302, locationHeader);
     
   } catch (error: any) {
     console.error('Error in direct redirect:', error);

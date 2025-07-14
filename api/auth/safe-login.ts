@@ -36,12 +36,27 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       code_challenge_method: 'S256'
     });
     
-    const authUrl = `https://${oktaDomain}/oauth2/default/v1/authorize?${authParams.toString()}`;
+    // Bulletproof URL construction to prevent colon loss
+    const httpsPrefix = 'https://';
+    const path = '/oauth2/default/v1/authorize';
+    const fullBaseUrl = httpsPrefix + oktaDomain + path;
+    const authUrl = fullBaseUrl + '?' + authParams.toString();
     
-    console.log('Safe auth URL generated:', authUrl);
-    console.log('oktaDomain check:', oktaDomain);
-    console.log('Protocol check:', protocol);
-    console.log('Host check:', host);
+    // Triple validation
+    if (!authUrl.includes('https://')) {
+      throw new Error('HTTPS protocol missing from auth URL');
+    }
+    if (!authUrl.includes(oktaDomain)) {
+      throw new Error('Domain missing from auth URL');  
+    }
+    
+    console.log('✅ BULLETPROOF Auth URL generated:', authUrl);
+    console.log('🔍 Domain check:', oktaDomain);
+    console.log('🌐 Protocol check:', protocol);
+    console.log('🏠 Host check:', host);
+    console.log('🔗 Full base URL:', fullBaseUrl);
+    console.log('✅ Contains https://:', authUrl.includes('https://'));
+    console.log('✅ Contains domain:', authUrl.includes(oktaDomain));
     
     // Additional validation
     if (!authUrl.startsWith('https://')) {

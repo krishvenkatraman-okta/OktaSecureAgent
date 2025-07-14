@@ -16,22 +16,11 @@ export function useWorkflowState(sessionId: string) {
   const workflowQuery = useQuery({
     queryKey: ['/api/workflow', sessionId],
     enabled: !!sessionId,
-    refetchInterval: (data) => {
-      // Poll faster when workflow is active (steps 2+), slower when idle (step 1)
-      const currentStep = data?.session?.currentStep || 1;
-      return currentStep > 1 ? 2000 : 5000; // 2s when active, 5s when idle
-    },
-    refetchIntervalInBackground: true,
-    staleTime: 0, // Always consider data stale for immediate updates
-    gcTime: 0, // Don't cache stale data
-    retry: (failureCount, error: any) => {
-      // If session not found (404), don't retry but don't refresh page
-      if (error?.response?.status === 404 || error?.status === 404) {
-        console.log('Session expired or not found - stopping retries');
-        return false;
-      }
-      return failureCount < 3;
-    },
+    refetchInterval: false, // Disable automatic polling to prevent refresh loops
+    refetchIntervalInBackground: false,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    gcTime: 300000, // Keep in cache for 5 minutes
+    retry: false, // Disable retries to prevent issues
   });
 
   const initWorkflowMutation = useMutation({

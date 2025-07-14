@@ -3,26 +3,32 @@ import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
-  const url = new URL(req.url || '', `https://${req.headers.host}`);
-  const pathname = url.pathname;
+  const url = req.url || '';
+  
+  console.log('API Index - URL:', url);
+  console.log('API Index - Method:', req.method);
   
   // Route: /api/auth/direct-redirect
-  if (pathname === '/api/auth/direct-redirect') {
+  if (url.includes('/auth/direct-redirect')) {
+    console.log('Routing to direct redirect');
     return handleDirectRedirect(req, res);
   }
   
-  // Route: /api/auth/debug-auth
-  if (pathname === '/api/auth/debug-auth') {
+  // Route: /api/auth/debug-auth  
+  if (url.includes('/auth/debug-auth')) {
+    console.log('Routing to debug auth');
     return handleDebugAuth(req, res);
   }
   
   // Route: /api/auth/safe-login
-  if (pathname === '/api/auth/safe-login') {
+  if (url.includes('/auth/safe-login')) {
+    console.log('Routing to safe login');
     return handleSafeLogin(req, res);
   }
   
   // Route: /api/auth/login
-  if (pathname === '/api/auth/login') {
+  if (url.includes('/auth/login')) {
+    console.log('Routing to login');
     return handleLogin(req, res);
   }
   

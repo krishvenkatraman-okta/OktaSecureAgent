@@ -122,9 +122,30 @@ export default function Dashboard() {
           description: 'Opening Okta authentication...',
         });
         
-        // Ensure URL is properly formatted before redirect
-        const safeUrl = data.authUrl.replace(/^https\/\//, 'https://');
+        // Multiple validation approaches for URL safety
+        console.log('Raw auth URL from server:', data.authUrl);
+        
+        // Method 1: Replace any malformed https patterns
+        let safeUrl = data.authUrl.replace(/^https\/\//, 'https://');
+        console.log('After pattern fix:', safeUrl);
+        
+        // Method 2: Use URL constructor for validation
+        try {
+          const urlObj = new URL(safeUrl);
+          safeUrl = urlObj.href;
+          console.log('After URL constructor:', safeUrl);
+        } catch (e) {
+          console.error('URL constructor failed, using original:', e);
+        }
+        
+        // Method 3: Final validation
+        if (!safeUrl.startsWith('https://')) {
+          console.error('CRITICAL: URL still malformed, forcing fix');
+          safeUrl = 'https://' + safeUrl.replace(/^https?:?\/?\/?/, '');
+        }
+        
         console.log('Final redirect URL:', safeUrl);
+        console.log('URL validation passed:', safeUrl.startsWith('https://') && safeUrl.includes('fcxdemo.okta.com'));
         
         // Redirect to Okta for authentication
         window.location.href = safeUrl;

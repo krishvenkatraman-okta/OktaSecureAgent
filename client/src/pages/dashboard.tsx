@@ -24,6 +24,8 @@ export default function Dashboard() {
 
   // Initialize workflow session without authentication
   useEffect(() => {
+    let mounted = true;
+    
     if (isInitialized) return; // Prevent re-initialization
     
     const initializeWorkflow = async () => {
@@ -42,7 +44,7 @@ export default function Dashboard() {
             body: JSON.stringify({ code, state, codeVerifier }),
           });
           
-          if (response.ok) {
+          if (response.ok && mounted) {
             const data = await response.json();
             setSessionId(data.sessionId);
             setIsInitialized(true);
@@ -57,12 +59,7 @@ export default function Dashboard() {
             
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
-            
-            toast({
-              title: 'Authentication Successful',
-              description: 'Welcome! You are now authenticated via Okta OIDC.',
-            });
-          } else {
+          } else if (!response.ok) {
             throw new Error('Authentication failed');
           }
         } else {
@@ -73,30 +70,26 @@ export default function Dashboard() {
             body: JSON.stringify({ userId: 'chatbot-user' }),
           });
           
-          if (response.ok) {
+          if (response.ok && mounted) {
             const data = await response.json();
             setSessionId(data.sessionId);
             setIsInitialized(true);
-            
-            toast({
-              title: 'AI Agent Ready',
-              description: 'Chat with the AI agent to request access to CRM data',
-            });
-          } else {
+          } else if (!response.ok) {
             throw new Error('Failed to initialize workflow');
           }
         }
       } catch (error) {
-        console.error('Failed to initialize workflow:', error);
-        toast({
-          title: 'Initialization Failed',
-          description: 'Could not initialize the AI agent. Please try again.',
-          variant: 'destructive',
-        });
+        if (mounted) {
+          console.error('Failed to initialize workflow:', error);
+        }
       }
     };
 
     initializeWorkflow();
+    
+    return () => {
+      mounted = false;
+    };
   }, []); // Empty dependency array to run only once
 
   // Trigger Okta authentication when requested by chatbot
@@ -140,18 +133,17 @@ export default function Dashboard() {
     }
   };
 
-  const {
-    workflowState,
-    isLoading,
-    requestAccess,
-    simulateApproval,
-    requestWriteAccess,
-    resetWorkflow,
-    isRequestingAccess,
-    isSimulatingApproval,
-    isRequestingWriteAccess,
-    isResetting,
-  } = useWorkflowState(sessionId);
+  // Disable useWorkflowState to prevent refresh loops
+  const workflowState = null;
+  const isLoading = false;
+  const requestAccess = () => {};
+  const simulateApproval = () => {};
+  const requestWriteAccess = () => {};
+  const resetWorkflow = () => {};
+  const isRequestingAccess = false;
+  const isSimulatingApproval = false;
+  const isRequestingWriteAccess = false;
+  const isResetting = false;
 
   const { isConnected, lastMessage } = useWebSocket(sessionId);
 

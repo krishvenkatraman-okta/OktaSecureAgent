@@ -97,7 +97,7 @@ export default function Dashboard() {
     try {
       console.log('Triggering authentication...');
       
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/safe-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -105,6 +105,12 @@ export default function Dashboard() {
       if (response.ok) {
         const data = await response.json();
         console.log('Auth URL received:', data.authUrl);
+        console.log('Auth URL debug info:', data.debug);
+        
+        // Validate URL format before redirect
+        if (!data.authUrl.startsWith('https://')) {
+          throw new Error('Invalid authentication URL format received');
+        }
         
         // Store PKCE code verifier for token exchange
         if (data.codeVerifier) {

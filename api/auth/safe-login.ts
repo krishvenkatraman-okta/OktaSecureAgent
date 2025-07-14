@@ -25,36 +25,44 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const redirectUri = `${protocol}://${host}/`;
     
-    // Ensure proper URL construction
-    const baseUrl = `https://${oktaDomain}/oauth2/default/v1/authorize`;
-    const authUrl = new URL(baseUrl);
-    authUrl.searchParams.set('client_id', spaClientId);
-    authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', 'openid profile email');
-    authUrl.searchParams.set('redirect_uri', redirectUri);
-    authUrl.searchParams.set('state', state);
-    authUrl.searchParams.set('code_challenge', codeChallenge);
-    authUrl.searchParams.set('code_challenge_method', 'S256');
+    // Safe URL construction using string concatenation
+    const authParams = new URLSearchParams({
+      client_id: spaClientId,
+      response_type: 'code',
+      scope: 'openid profile email',
+      redirect_uri: redirectUri,
+      state: state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256'
+    });
     
-    console.log('Generated auth URL:', authUrl.toString());
-    console.log('Redirect URI:', redirectUri);
-    console.log('oktaDomain:', oktaDomain);
-    console.log('Base URL check:', baseUrl);
+    const authUrl = `https://${oktaDomain}/oauth2/default/v1/authorize?${authParams.toString()}`;
     
-    // Verify the URL has proper https:// format
-    if (!authUrl.toString().startsWith('https://')) {
-      console.error('WARNING: Auth URL does not start with https://');
+    console.log('Safe auth URL generated:', authUrl);
+    console.log('oktaDomain check:', oktaDomain);
+    console.log('Protocol check:', protocol);
+    console.log('Host check:', host);
+    
+    // Additional validation
+    if (!authUrl.startsWith('https://')) {
+      console.error('ERROR: Auth URL does not start with https://');
+      throw new Error('Invalid URL format generated');
     }
     
     return res.status(200).json({
-      authUrl: authUrl.toString(),
+      authUrl,
       codeVerifier,
       state,
-      redirectUri
+      redirectUri,
+      debug: {
+        oktaDomain,
+        host,
+        protocol
+      }
     });
     
   } catch (error: any) {
-    console.error('Error generating auth URL:', error);
+    console.error('Error generating safe auth URL:', error);
     return res.status(500).json({
       error: 'Failed to generate auth URL',
       message: error.message

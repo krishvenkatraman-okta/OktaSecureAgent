@@ -1,29 +1,22 @@
-import express from 'express';
-import path from 'path';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-const app = express();
-
-// Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Serve static files from client/dist
-app.use(express.static(path.join(process.cwd(), 'client/dist')));
-
-// Basic API test route
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Minimal Express working', timestamp: new Date().toISOString() });
-});
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', env: process.env.NODE_ENV });
-});
-
-// Fallback to serve React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(process.cwd(), 'client/dist/index.html'));
-});
-
-export default app;
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  return res.status(200).json({
+    message: 'Minimal Vercel API Working',
+    environment: {
+      hasOktaDomain: !!process.env.OKTA_DOMAIN,
+      hasApiToken: !!process.env.OKTA_API_TOKEN,
+      hasSpaClientId: !!process.env.OKTA_SPA_CLIENT_ID,
+      nodeEnv: process.env.NODE_ENV || 'production'
+    },
+    timestamp: new Date().toISOString()
+  });
+}

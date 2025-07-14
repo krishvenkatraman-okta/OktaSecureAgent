@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { nanoid } from 'nanoid';
 import crypto from 'crypto';
+import { sessionStorage } from '../shared/session-storage';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -24,27 +25,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('OIDC Callback - State:', state);
     console.log('OIDC Callback - SessionId:', sessionId);
 
-    // Initialize workflow session with authentication
-    const workflowResponse = await fetch(`${req.headers.origin}/api/workflow/init`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        userId: 'okta-user',
-        isAuthenticated: true,
-        authCode: code,
-        sessionId: sessionId
-      }),
-    });
+    // Create authenticated session directly
+    const authenticatedSession = {
+      sessionId,
+      currentStep: 1,
+      status: 'authenticated',
+      createdAt: new Date().toISOString(),
+      userId: 'okta-user',
+      isAuthenticated: true,
+      authCode: code,
+      authState: state
+    };
 
-    if (!workflowResponse.ok) {
-      throw new Error('Failed to initialize authenticated workflow');
-    }
-
-    const workflowData = await workflowResponse.json();
+    sessionStorage.set(sessionId, authenticatedSession);
+    
+    console.log('Created authenticated session:', sessionId);
 
     res.status(200).json({
       success: true,
-      sessionId: workflowData.sessionId,
+      sessionId,
       authenticated: true,
       message: 'Authentication successful'
     });

@@ -1,8 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { nanoid } from 'nanoid';
-
-// Simple in-memory storage for Vercel
-const sessions = new Map();
+import { sessionStorage } from '../shared/session-storage';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST' && req.method !== 'GET') {
@@ -31,7 +29,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       isAuthenticated: false
     };
 
-    sessions.set(sessionId, session);
+    sessionStorage.set(sessionId, session);
     
     console.log('Workflow session created:', sessionId);
     

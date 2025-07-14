@@ -24,6 +24,8 @@ export default function Dashboard() {
 
   // Initialize workflow session without authentication
   useEffect(() => {
+    if (isInitialized) return; // Prevent re-initialization
+    
     const initializeWorkflow = async () => {
       try {
         // First check if we're returning from Okta callback
@@ -95,7 +97,7 @@ export default function Dashboard() {
     };
 
     initializeWorkflow();
-  }, [toast]);
+  }, []); // Empty dependency array to run only once
 
   // Trigger Okta authentication when requested by chatbot
   const triggerAuthentication = async () => {

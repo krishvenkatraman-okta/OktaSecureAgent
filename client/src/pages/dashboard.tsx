@@ -36,8 +36,29 @@ export default function Dashboard() {
         const state = urlParams.get('state');
         
         if (code && state) {
-          // Handle Okta callback
-          const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+          console.log('Detected auth callback - code:', code.substring(0, 20) + '...');
+          console.log('Detected auth callback - state:', state);
+          
+          // Handle Okta callback - try to get PKCE verifier from cookie first
+          let codeVerifier = null;
+          
+          // Check if PKCE verifier is in cookie (set by server-side redirect)
+          const cookies = document.cookie.split(';');
+          for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'pkce_verifier') {
+              codeVerifier = value;
+              break;
+            }
+          }
+          
+          // Fallback to sessionStorage
+          if (!codeVerifier) {
+            codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+          }
+          
+          console.log('Using PKCE verifier:', codeVerifier ? 'Found' : 'Missing');
+          
           const response = await fetch('/api/auth/oidc-callback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -46,6 +67,8 @@ export default function Dashboard() {
           
           if (response.ok && mounted) {
             const data = await response.json();
+            console.log('Authentication callback successful:', data);
+            
             setSessionId(data.sessionId);
             setIsInitialized(true);
             setIsAuthenticated(true);
@@ -57,10 +80,16 @@ export default function Dashboard() {
               setCurrentStep(workflowData.session.currentStep);
             }
             
-            // Clean up URL
+            // Clean up URL and cookies
             window.history.replaceState({}, document.title, window.location.pathname);
-          } else if (!response.ok) {
-            throw new Error('Authentication failed');
+            
+            // Clear PKCE verifier cookie
+            document.cookie = 'pkce_verifier=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+          } else {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            console.error('Authentication callback failed:', errorData);
+            throw new Error(errorData.error || 'Authentication failed');
           }
         } else {
           // Initialize workflow session without authentication

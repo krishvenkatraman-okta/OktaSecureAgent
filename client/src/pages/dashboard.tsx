@@ -102,9 +102,13 @@ export default function Dashboard() {
         description: 'Opening Okta authentication...',
       });
       
-      // Use direct server redirect instead of JavaScript redirect
-      // This bypasses any JavaScript URL manipulation issues
-      window.location.href = '/api/auth/direct-redirect';
+      // Try simple redirect first, fallback to direct-redirect
+      try {
+        window.location.href = '/api/simple-redirect';
+      } catch (error) {
+        console.error('Simple redirect failed, trying direct-redirect:', error);
+        window.location.href = '/api/auth/direct-redirect';
+      }
       
     } catch (error) {
       console.error('Authentication trigger failed:', error);

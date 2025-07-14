@@ -25,10 +25,9 @@ export function useWorkflowState(sessionId: string) {
     staleTime: 0, // Always consider data stale for immediate updates
     gcTime: 0, // Don't cache stale data
     retry: (failureCount, error: any) => {
-      // If session not found (404), force page refresh to get new session
+      // If session not found (404), don't retry but don't refresh page
       if (error?.response?.status === 404 || error?.status === 404) {
-        console.log('Session expired or not found - refreshing page for new session');
-        setTimeout(() => window.location.reload(), 1000);
+        console.log('Session expired or not found - stopping retries');
         return false;
       }
       return failureCount < 3;
